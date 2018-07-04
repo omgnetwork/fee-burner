@@ -1,0 +1,7 @@
+.vscode
+
+populus/.fee_burner_env
+populus/build
+populus/.pytest_cache
+populus/tests/__pycache__
+
