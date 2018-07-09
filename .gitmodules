@@ -1,0 +1,3 @@
+[submodule "plasma-contracts"]
+	path = plasma-contracts
+	url = git@github.com:omisego/plasma-contracts.git
