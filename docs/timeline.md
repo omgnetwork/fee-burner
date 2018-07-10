@@ -10,12 +10,11 @@ This document specifies a plan of fee-burner's implementation. In the following 
 This sprint is mainly a planning period with a little work on system's design. 
 
 ### Tasks
--  Gain knowledge on Ethereum;
--  Gain knowledge on Tesuji Plasma;
--  Prepare a draft of the product's architecture;
--  Prepare the interfaces' design;
--  Prepare a plan of work;
--  Prepare integration tests.
+- Gain knowledge on Ethereum;
+- Gain knowledge on Tesuji Plasma;
+- Prepare a plan of work;
+- Prepare a draft of the product's architecture;
+- Prepare the interfaces' design.
 
 ## Second sprint
 
@@ -25,8 +24,9 @@ This sprint is mainly a planning period with a little work on system's design.
 This sprint will consist of tasks connected with fee-burner contract.
 
 ### Tasks
+- Prepare integration tests;
 - Prepare fee-burner contract design, API;
-- Implement fee-burner contract with its tests;
+- Implement fee-burner contract with its tests.
 
 ## Third sprint 
 
@@ -44,7 +44,7 @@ This period will consist of tasks connected with root chain contract's modificat
 **Dates: 16.08-31.08**<br/>
 *Duration: 2.5 weeks*
 
-During this period it is planned to implement a microservice that will take care of fee handling process. Its task is to start such a process and send further eligible exit fees.
+During this period, it is planned to implement a microservice that will take care of fee handling process. Its task is to start such a process and send further eligible exit fees.
 
 ### Tasks 
 - Prepare a microservice's architecture;
