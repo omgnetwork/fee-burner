@@ -32,18 +32,18 @@ After a challenge period, the exit fee should be sent directly to the `fee-burne
 
 ## Interfaces
 
-## Root chain contract
-Two new public methods will be implemented in the root chain contract. One will be responsible for starting fee exit and the other one for finishing fee exit. Both method can be invoked by the operator only.
+### Root chain contract
+Two new public methods will be implemented in the root chain contract. One will be responsible for starting fee exit and the other one for finalising fee exit. Both method can be invoked by the operator only.
 
-## Fee-burner contract
+### Fee-burner contract
 Fee-burner will provide the following interface:
 - check exchange rate of a token;
-- set exchange sate (*only operator*);
+- set exchange rate (*only operator*);
 - exchange tokens;
 - exchange `OMG`s for `ETH`;
 - receive `ETH` deposit.
 
-## Microservice
+### Microservice
 
 The microservice will work on behalf of the operator and will use public interface of both contracts, mainly only those which usage is restricted to the operator only.
 Microservice can use `watcher` or `state` in order to compute the fees available to exit.

@@ -13,11 +13,11 @@ In the following text one can find use cases of fee-burner.
 **Note: a microservice works on behalf of the operator**
 
 1. Operator chooses a token of the fees to be claimed.
-2. Operator count the sum of the fees available to exit.
-3. Operator sends a request to begin fee exit token to the root chain contract. The request consists of the token and the sum.   
-4. System starts fees exit.
-5. Challenge period is waited.
-6. Operator requests the root chain contract to send the fees to the fee-burner contract.
+1. Operator count the sum of the fees available to exit.
+1. Operator sends a request to begin fee exit token to the root chain contract. The request consists of the token and the sum.   
+1. System starts fees exit.
+1. Challenge period is waited.
+1. Operator requests to finalise the fees exit.
  
 ## Exchanging OMG tokens for other token
 
