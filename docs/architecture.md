@@ -4,6 +4,8 @@ This is a description of fee-burner's design.
 
 ## Overview
 
+![Image introducing systems' architecture](fee-burner.png)
+
 ## Modules
 The whole system consists of 3 products:
 - 2 Ethereum contracts (root chain contract and fee-burner contract), one depends on the other;
@@ -45,6 +47,3 @@ Fee-burner will provide the following interface:
 
 The microservice will work on behalf of the operator and will use public interface of both contracts, mainly only those which usage is restricted to the operator only.
 Microservice can use `watcher` or `state` in order to compute the fees available to exit.
-
-
-
