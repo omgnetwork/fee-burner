@@ -2,8 +2,10 @@
 
 This is a description of fee-burner's design.
 
+## Overview
+
 ## Modules
-Whole system consists of 3 products:
+The whole system consists of 3 products:
 - 2 Ethereum contracts (root chain contract and fee-burner contract), one depends on the other;
 - a microservice written in `Elixir`;
 
@@ -17,20 +19,32 @@ This is a completely new contract. This contract receives fees and provides an a
 ### Microservice
 The microservice is responsible for periodically starting fees' exits and finalising those that got through the challenge period. 
 
-#### Starting fee exit
+#### Beginning fee exit
 
 From time to time, the microservice should start fees' exit, having previously computed the amount of fees eligible to exit. 
-Starting fee exit is calling proper method on root chain contract with specified token and amount as call arguments.
+Beginning fee exit is as simple as calling proper method on the root chain contract with specified token and amount as call arguments.
 
 #### Finalising fee exit
 
-After a challenge period, the exit fee should be sent directly to the `fee burner` - the microservice should initialise such a transaction. 
+After a challenge period, the exit fee should be sent directly to the `fee-burner` - the microservice should initialise such a transaction. 
 
 ## Interfaces
 
-TODO:
+## Root chain contract
+Two new public methods will be implemented in the root chain contract. One will be responsible for starting fee exit and the other one for finishing fee exit. Both method can be invoked by the operator only.
 
-## A picture is worth a thousand words
+## Fee-burner contract
+Fee-burner will provide the following interface:
+- check exchange rate of a token;
+- set exchange sate (*only operator*);
+- exchange tokens;
+- exchange `OMG`s for `ETH`;
+- receive `ETH` deposit.
 
-TODO:
+## Microservice
+
+The microservice will work on behalf of the operator and will use public interface of both contracts, mainly only those which usage is restricted to the operator only.
+Microservice can use `watcher` or `state` in order to compute the fees available to exit.
+
+
 
