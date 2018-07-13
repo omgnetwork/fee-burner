@@ -4,6 +4,7 @@ import "./ERC20_token/ERC20.sol";
 
 /**
  * @title FeeBurner
+ * @author Piotr Zelazko <pitor.zelazko@icloud.com>
  * @dev TODO:
  */
 contract FeeBurner { 
@@ -21,8 +22,8 @@ contract FeeBurner {
      * Storage
      */
 
-    // the exchange rate is a ratio of OMG tokens to otherTokens 
-    // ratio = OMGTokens/otherTokens = nominator/denominator
+    /// @notice the exchange rate is a ratio of OMG tokens to otherTokens 
+    /// @notice ratio = OMGTokens/otherTokens = nominator/denominator
     struct ExchangeRate { 
         uint nominator;
         uint denominator;
@@ -38,6 +39,8 @@ contract FeeBurner {
     address public operator;
     ERC20 public OMGToken;
 
+    uint constant NEW_RATE_WITHOLD_BLOCKS_NO = 100;
+
     mapping (address => ExchangeRate) public exchangeRates; 
     mapping (address => PendingExchangeRate) public pendingExchangeRates;
 
@@ -50,27 +53,42 @@ contract FeeBurner {
     }
 
     /**
-     * Constructor
+     * @dev Constructor
+     * 
+     * @param _OMGToken address of OMGToken contract
+     * @param _etherNominator nominator of the initial OMG to ETH ratio
+     * @param _etherDenominator denominator of the initial OMG to ETH ratio
      */
-    constructor(address _OMGToken, uint etherNominator, uint etherDenominator)
+    constructor(address _OMGToken, uint _etherNominator, uint _etherDenominator)
         public
     {   
         //TODO: should I check this ?
-        require(etherNominator > 0);
-        require(etherDenominator > 0);
+        require(_etherNominator > 0);
+        require(_etherDenominator > 0);
         require(_OMGToken != address(0));
 
         operator = msg.sender;
         OMGToken = ERC20(_OMGToken);    
         
-        exchangeRates[address(0)] = ExchangeRate(etherNominator, etherDenominator);
+        // At deployment, supports only Ether
+        exchangeRates[address(0)] = ExchangeRate(_etherNominator, _etherDenominator);
     }
 
     /*
      * Public functions
      */
     
-
+    /**
+     * @dev Sets new exchange rate for a specified token. 
+     * 
+     * @notice Note that the new rate will automatically take  
+     *         effect after NEW_RATE_WITHOLD_BLOCKS_NO number of blocks.
+     * @notice Once new rate is set it cannot be changed until it has taken effect.
+     * 
+     * @param _token contract address of the ERC20 token, which rate is changed
+     * @param _nominator nominator of the new exchange rate. See ExchangeRate struct.
+     * @param _denominator denominator of the new exchange rate. See ExchangeRate struct.  
+     */
     function setExchangeRate(address _token, uint _nominator, uint _denominator)
         public
         onlyOperator
