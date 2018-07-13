@@ -29,14 +29,17 @@ contract FeeBurner {
     } 
 
     struct PendingExchangeRate {
-        uint256 timestamp;
-        ExchangeRate newRate;
+        uint blockNo;
+        uint nominator;
+        uint denominator;
     }
 
 
     address public operator;
-    mapping (address => ExchangeRate) public exchangeRates; //TODO: change address to ERC20
-    mapping (address => PendingExchangeRate) public pendingExchangeRates; // TODO: change address to ERC20
+    ERC20 public OMGToken;
+
+    mapping (address => ExchangeRate) public exchangeRates; 
+    mapping (address => PendingExchangeRate) public pendingExchangeRates;
 
     /*
      * Modifiers
@@ -49,10 +52,18 @@ contract FeeBurner {
     /**
      * Constructor
      */
-    constructor()
+    constructor(address _OMGToken, uint etherNominator, uint etherDenominator)
         public
-    {
+    {   
+        //TODO: should I check this ?
+        require(etherNominator > 0);
+        require(etherDenominator > 0);
+        require(_OMGToken != address(0));
+
         operator = msg.sender;
+        OMGToken = ERC20(_OMGToken);    
+        
+        exchangeRates[address(0)] = ExchangeRate(etherNominator, etherDenominator);
     }
 
     /*
@@ -64,9 +75,22 @@ contract FeeBurner {
         public
         onlyOperator
     {
-        
+        require(exchangeRates[_token].nominator != 0);
+        require(_nominator != 0);
+        require(_denominator != 0);
+        require(pendingExchangeRates[_token].blockNo == 0);
+
+        pendingExchangeRates[_token] = PendingExchangeRate(block.number, _nominator, _denominator);
+
     }
+
+    /*
+     * Public view functions
+     */
+
+     
 }
+
 
 
 
