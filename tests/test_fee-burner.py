@@ -144,9 +144,34 @@ def test_failure_when_adding_already_supported_token(fee_burner, operator, other
     #when: the operator tries to add it one again
     #then: an error occurs
     with pytest.raises(TransactionFailed):
-        fee_burner.transact({'from':operator}).addSupportFor(other_token.address, 1, 1)
+        fee_burner.transact({'from' : operator}).addSupportFor(other_token.address, 1, 1)
 
 
+
+#TODO: place to start next time
+def test_exchange_omg_for_some_token(non_operator, operator, omg_token, fee_burner, other_token):
+    
+    # #given: added support for some token and
+    fee_burner.transact({'from': operator}).addSupportFor(other_token.address, 1, 1)
+    other_token.transact({'from': operator}).transfer(fee_burner.address, 10)
+
+
+    #given: a user adds adds allowace on OMG contract and user has some initial tokens
+    omg_token.transact({'from': non_operator}).approve(fee_burner.address, 10)
+    user_initial_balance = other_token.call().balanceOf(non_operator)
+
+
+    # TODO: 
+    assert omg_token.call().allowance(non_operator, fee_burner.address) == 10
+    assert user_initial_balance != 0
+    
+    # #when: the user sends an exchange demand OMG for other token at rate 1,1 (initial rate)
+    fee_burner.transact({'from': non_operator}).exchange(other_token.address, 1, 1, 1, 1)
+
+    # #then: user has received token and OMGs were burnt 
+    assert omg_token.call().balanceOf(DEAD_ADDRESS) == 10
+    assert other_token.call().balanceOf(non_operator) == user_initial_balance + 10
+    
 
 def test_set_new_ether_exchange_rate(fee_burner, operator):
 

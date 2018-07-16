@@ -1,6 +1,7 @@
 pragma solidity ^0.4.0;
 
 import "./ERC20_token/ERC20.sol";
+import './math/SafeMath.sol';
 
 /**
  * @title FeeBurner
@@ -8,6 +9,8 @@ import "./ERC20_token/ERC20.sol";
  * @dev TODO:
  */
 contract FeeBurner { 
+    
+    using SafeMath for uint256;
 
     /*
     * Events
@@ -37,9 +40,10 @@ contract FeeBurner {
         uint denominator;
     }
 
-
     address public operator;
     ERC20 public OMGToken;
+
+    uint public balance = 0;
 
     uint constant NEW_RATE_MATURITY_MARGIN = 100;
 
@@ -73,12 +77,21 @@ contract FeeBurner {
 
         operator = msg.sender;
         OMGToken = ERC20(_OMGToken);    
-        
+
     }
 
     /*
      * Public functions
      */
+
+
+    /**
+     * @dev Receives Eth    
+     */
+
+    function () public payable {
+        balance = balance.add(msg.value);
+    }
     
     /**
      * @dev Sets new exchange rate for a specified token. 
@@ -122,6 +135,21 @@ contract FeeBurner {
         require(exchangeRates[_token].nominator == 0);
 
         exchangeRates[_token] = ExchangeRate(_nominator, _denominator);
+        //TODO: Should I emit an event ?
+    }
+
+
+    //TODO: place to start next time
+    function exchange(address _token, uint _nominator, uint _denominator, uint _omg_amount, uint _token_amount)
+        public
+        checkRate(_nominator, _denominator) 
+    {
+        
+        ERC20 token = ERC20(_token);
+
+        // OMGToken.transferFrom(msg.sender, address(0), _omg_amount);
+        
+        // token.transfer(msg.sender, _token_amount);
 
     }
 
