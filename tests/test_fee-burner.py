@@ -25,7 +25,10 @@ def getAddress(web3, OMGContractClass):
 
 
 def mintToken(chain, token, accounts, owner):
-    for validator in accounts:
+
+    used_accounts = accounts[0:1]
+
+    for validator in used_accounts:
         chain.wait.for_receipt(
             token.transact({'from': owner}).mint(validator, HUGE_AMOUNT)
         )
@@ -48,6 +51,11 @@ def deploy_fee_burner(omg_address, chain, owner, etherNominator, etherDenominato
 def operator(accounts):
     return accounts[0]
 
+@pytest.fixture()
+def non_operator(operator, accounts):
+    for user in accounts:
+        if user != operator:
+            return user
 
 @pytest.fixture()
 def OMGContractClass(web3):
@@ -91,37 +99,8 @@ def other_token(chain, accounts, OMGContractClass):
 def fee_burner(omg_token, chain, operator):
     return deploy_fee_burner(omg_token.address, chain, operator, 1, 1)
 
+
 # TESTS
-
-
-def test_contracts_deployment(omg_token, other_token, fee_burner, operator):
-
-    assert omg_token.call().name() == "OMGToken"
-    assert omg_token.call().symbol() == "OMG"
-
-    assert omg_token.address != other_token.address
-
-    assert omg_token.call().owner() == DEAD_ADDRESS
-    assert other_token.call().owner() == DEAD_ADDRESS
-
-
-def test_fee_burner_construction(chain, omg_token, operator):
-
-    # when: an operator deploys a fee burner contract
-    fee_burner = deploy_fee_burner(omg_token.address, chain, operator, 1, 10)
-
-    # then: its operator is set to the given operator
-    assert fee_burner.call().operator() == operator
-
-    # then: OMG token reference is set properly
-    assert fee_burner.call().OMGToken().lower() == omg_token.address
-
-    # then: Ether exchange rate is set as in given params
-    assert fee_burner.call().exchangeRates(ZERO_ADDRESS) == [1, 10]
-
-    # then: Ether pending exchange rate is not set
-    assert fee_burner.call().pendingExchangeRates(ZERO_ADDRESS) == [0, 0, 0]
-
 
 def test_set_new_ether_exchange_rate(fee_burner, operator):
 
@@ -133,17 +112,12 @@ def test_set_new_ether_exchange_rate(fee_burner, operator):
     assert pending_rate[-2:] == [1, 1]
 
 
-def test_change_exchange_rate_by_a_non_operator(fee_burner, accounts, operator):
-
-    # given: a non operator
-    for user in accounts:
-        if user != operator:
-            break
+def test_change_exchange_rate_by_a_non_operator(fee_burner, accounts, non_operator):
 
     # when: a user tries to set an new exchange rate
 
     with pytest.raises(TransactionFailed):
-        fee_burner.transact({'from': user}).setExchangeRate(
+        fee_burner.transact({'from': non_operator}).setExchangeRate(
             ZERO_ADDRESS, 1, 1)
 
     # then: rate has not changed
@@ -174,6 +148,7 @@ def test_set_new_rate_of_an_invalid_token(fee_burner, operator, other_token):
 
 
 def test_setting_new_rate_while_already_pending_rate_set(fee_burner, operator):
+    
     # given: pending exchange rate
     fee_burner.transact({'from': operator}).setExchangeRate(ZERO_ADDRESS, 1, 1)
 
