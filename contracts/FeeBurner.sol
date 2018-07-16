@@ -54,26 +54,26 @@ contract FeeBurner {
         _;
     }
 
+    modifier checkRate(uint nominator, uint denominator){
+        require(nominator > 0);
+        require(denominator > 0);
+        _;
+    }
+
     /**
      * @dev Constructor
      * 
      * @param _OMGToken address of OMGToken contract
-     * @param _etherNominator nominator of the initial OMG to ETH ratio
-     * @param _etherDenominator denominator of the initial OMG to ETH ratio
      */
-    constructor(address _OMGToken, uint _etherNominator, uint _etherDenominator)
+    constructor(address _OMGToken)
         public
     {   
         //TODO: should I check this ?
-        require(_etherNominator > 0);
-        require(_etherDenominator > 0);
         require(_OMGToken != address(0));
 
         operator = msg.sender;
         OMGToken = ERC20(_OMGToken);    
         
-        // At deployment, supports only Ether
-        exchangeRates[address(0)] = ExchangeRate(_etherNominator, _etherDenominator);
     }
 
     /*
@@ -94,13 +94,34 @@ contract FeeBurner {
     function setExchangeRate(address _token, uint _nominator, uint _denominator)
         public
         onlyOperator
+        checkRate(_nominator, _denominator)
     {
         require(exchangeRates[_token].nominator != 0);
-        require(_nominator != 0);
-        require(_denominator != 0);
         require(pendingExchangeRates[_token].blockNo == 0);
 
         pendingExchangeRates[_token] = PendingExchangeRate(block.number, _nominator, _denominator);
+
+    }
+
+
+    /**
+     * @dev Adds support for some token
+     * 
+     * @notice By setting _token address to 0, support for Ehter can be added
+     *
+     * @param _token contract address of ERC20 token, or 0 for Ether, which support should be added
+     * @param _nominator nominator of intial exchange rate. See ExchangeRate struct.
+     * @param _denominator denominator of initial exchange rate. See ExchangeRate struct.   
+     */
+    function addSupportFor(address _token, uint _nominator, uint _denominator)
+        public
+        onlyOperator
+        checkRate(_nominator, _denominator)
+    {   
+        
+        require(exchangeRates[_token].nominator == 0);
+
+        exchangeRates[_token] = ExchangeRate(_nominator, _denominator);
 
     }
 

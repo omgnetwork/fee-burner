@@ -37,12 +37,11 @@ def mintToken(chain, token, accounts, owner):
     )
 
 
-def deploy_fee_burner(omg_address, chain, owner, etherNominator, etherDenominator):
+def deploy_fee_burner(omg_address, chain, owner):
     fee_burner, _ = chain.provider.get_or_deploy_contract('FeeBurner',
                                                           deploy_transaction={
                                                               'from': owner},
-                                                          deploy_args=[
-                                                              omg_address, etherNominator, etherDenominator]
+                                                          deploy_args=[omg_address]
                                                           )
     return fee_burner
 
@@ -97,10 +96,57 @@ def other_token(chain, accounts, OMGContractClass):
 
 @pytest.fixture()
 def fee_burner(omg_token, chain, operator):
-    return deploy_fee_burner(omg_token.address, chain, operator, 1, 1)
+
+    fee_burner = deploy_fee_burner(omg_token.address, chain, operator)
+
+    fee_burner.transact({'from': operator}).addSupportFor(ZERO_ADDRESS, 1, 1)
+
+    return fee_burner
 
 
 # TESTS
+
+def test_add_support_for_some_token(fee_burner, other_token, operator):
+    
+    #when: an operator adds support for some token
+    fee_burner.transact({'from':operator}).addSupportFor(other_token.address, 1, 123)
+
+    #then: this token is supported
+    assert fee_burner.call().exchangeRates(other_token.address) != [0,0]
+
+
+def test_add_support_for_a_token_by_a_non_operator(fee_burner, non_operator, other_token):
+    
+    #when: a non operator tries to add support for a token
+    #then: an error occurs
+    with pytest.raises(TransactionFailed):
+        fee_burner.transact({'from':non_operator}).addSupportFor(other_token.address, 1, 123)
+
+def test_failure_when_setting_invalid_initial_rate(fee_burner, operator, other_token):
+
+    #when: an operator tries to set invalid nominator 
+    #then: an error occurs
+        with pytest.raises(TransactionFailed):
+            fee_burner.transact({'from':operator}).addSupportFor(other_token.address, 0, 123)
+
+    #when: an operator tries to set invalid nominator 
+    #then: an error occurs
+        with pytest.raises(TransactionFailed):
+            fee_burner.transact({'from':operator}).addSupportFor(other_token.address, 1, 0)
+
+
+
+def test_failure_when_adding_already_supported_token(fee_burner, operator, other_token):
+    #given: added support for some token
+    fee_burner.transact({'from':operator}).addSupportFor(other_token.address, 1, 1)
+
+
+    #when: the operator tries to add it one again
+    #then: an error occurs
+    with pytest.raises(TransactionFailed):
+        fee_burner.transact({'from':operator}).addSupportFor(other_token.address, 1, 1)
+
+
 
 def test_set_new_ether_exchange_rate(fee_burner, operator):
 
