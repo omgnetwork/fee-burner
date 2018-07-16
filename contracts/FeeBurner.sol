@@ -22,8 +22,10 @@ contract FeeBurner {
      * Storage
      */
 
-    /// @notice the exchange rate is a ratio of OMG tokens to otherTokens 
-    /// @notice ratio = OMGTokens/otherTokens = nominator/denominator
+    /*
+     * @notice the exchange rate is a ratio of OMG tokens to otherTokens 
+     * @notice ratio = OMGTokens/otherTokens = nominator/denominator
+     */
     struct ExchangeRate { 
         uint nominator;
         uint denominator;
@@ -39,7 +41,7 @@ contract FeeBurner {
     address public operator;
     ERC20 public OMGToken;
 
-    uint constant NEW_RATE_WITHOLD_BLOCKS_NO = 100;
+    uint constant NEW_RATE_MATURITY_MARGIN = 100;
 
     mapping (address => ExchangeRate) public exchangeRates; 
     mapping (address => PendingExchangeRate) public pendingExchangeRates;
@@ -82,7 +84,7 @@ contract FeeBurner {
      * @dev Sets new exchange rate for a specified token. 
      * 
      * @notice Note that the new rate will automatically take  
-     *         effect after NEW_RATE_WITHOLD_BLOCKS_NO number of blocks.
+     *         effect after NEW_RATE_MATURITY_MARGIN number of blocks.
      * @notice Once new rate is set it cannot be changed until it has taken effect.
      * 
      * @param _token contract address of the ERC20 token, which rate is changed
