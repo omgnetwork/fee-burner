@@ -1,7 +1,8 @@
 pragma solidity ^0.4.0;
 
 import "./ERC20_token/ERC20.sol";
-import './math/SafeMath.sol';
+import "./OMG_ERC20/OMG_ERC20.sol";
+import "./math/SafeMath.sol";
 
 /**
  * @title FeeBurner
@@ -41,7 +42,7 @@ contract FeeBurner {
     }
 
     address public operator;
-    ERC20 public OMGToken;
+    OMG_ERC20 public OMGToken;
 
     uint public balance = 0;
 
@@ -76,7 +77,7 @@ contract FeeBurner {
         require(_OMGToken != address(0));
 
         operator = msg.sender;
-        OMGToken = ERC20(_OMGToken);    
+        OMGToken = OMG_ERC20(_OMGToken);    
 
     }
 
@@ -138,18 +139,48 @@ contract FeeBurner {
         //TODO: Should I emit an event ?
     }
 
-
-    //TODO: place to start next time
+    // TODO
     function exchange(address _token, uint _nominator, uint _denominator, uint _omg_amount, uint _token_amount)
         public
-        checkRate(_nominator, _denominator) 
+    {
+
+        // 1 ->
+        
+        OMGToken.transferFrom(msg.sender, address(0xDEAD), _omg_amount);
+        
+        // <- 1
+
+    }
+
+    function foo(address token)
+        public
     {
         
-        ERC20 token = ERC20(_token);
+        // 1
+        // OMGToken.transferFrom(msg.sender, address(0xDEAD), 10);
 
-        // OMGToken.transferFrom(msg.sender, address(0), _omg_amount);
+        // 2
+        // OMG_ERC20 omg = OMG_ERC20(token);
+        // omg.transferFrom(msg.sender, address(0xDEAD), 10);
+
+        // 3 : does not work !
+        // ERC20 otherToken = ERC20(token);
+        // otherToken.transferFrom(msg.sender, address(0xDEAD), 10);
+
+        // 4
+        // OMGToken.approve(0xDEAD, 1000);
+
+        // 5
+        ERC20 otherToken = ERC20(token);
+        otherToken.approve(0xDEAD, 1000);
+
+        // 6 
+        // OMG_ERC20 omg = OMG_ERC20(token);
+        // omg.approve(0xDEAD, 1000);
+
+        // omg.transfer(0xDEAD, 11);
         
-        // token.transfer(msg.sender, _token_amount);
+        // uint x = omg.balanceOf(0xDEAD);
 
     }
 
