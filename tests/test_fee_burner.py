@@ -111,23 +111,23 @@ def test_failure_when_adding_already_supported_token(fee_burner, operator, other
         fee_burner.functions.addSupportFor(other_token.address, 1, 1).transact()
 
 
-# def test_exchange_omg_for_some_token(non_operator, operator, omg_token, fee_burner, other_token):
-#
-#     # given: added support for some token and
-#     fee_burner.transact({'from': operator}).addSupportFor(other_token.address, 1, 1)
-#     other_token.transact({'from': operator}).transfer(fee_burner.address, SMALL_AMOUNT)
-#
-#     # given: a user adds adds allowance on OMG contract and user has some initial tokens
-#     omg_token.transact({'from': non_operator}).approve(fee_burner.address, SMALL_AMOUNT)
-#     user_initial_balance = other_token.call().balanceOf(non_operator)
-#
-#     # when: the user sends an exchange demand OMG for other token at rate 1,1 (initial rate)
-#     fee_burner.transact({'from': non_operator}).exchange(other_token.address, 1, 1, 1, 1)
-#
-#     # then: user has received token and OMGs have been burnt
-#     assert omg_token.call().balanceOf(DEAD_ADDRESS) == 1
-#     assert other_token.call().balanceOf(non_operator) == user_initial_balance + 1
-#
+def test_exchange_omg_for_some_token(non_operator, operator, omg_token, fee_burner, other_token):
+
+    # given: added support for some token and
+    fee_burner.transact({'from': operator}).addSupportFor(other_token.address, 1, 1)
+    other_token.transact({'from': operator}).transfer(fee_burner.address, SMALL_AMOUNT)
+
+    # given: a user adds adds allowance on OMG contract and user has some initial tokens
+    omg_token.transact({'from': non_operator}).approve(fee_burner.address, SMALL_AMOUNT)
+    user_initial_balance = other_token.call().balanceOf(non_operator)
+
+    # when: the user sends an exchange demand OMG for other token at rate 1,1 (initial rate)
+    fee_burner.transact({'from': non_operator}).exchange(other_token.address, 1, 1, 1, 1)
+
+    # then: user has received token and OMGs have been burnt
+    assert omg_token.call().balanceOf(DEAD_ADDRESS) == 1
+    assert other_token.call().balanceOf(non_operator) == user_initial_balance + 1
+
 
 def test_set_new_ether_exchange_rate(fee_burner):
     # when: an operator changes Ether exchange rate

@@ -139,48 +139,14 @@ contract FeeBurner {
         //TODO: Should I emit an event ?
     }
 
-    // TODO
     function exchange(address _token, uint _nominator, uint _denominator, uint _omg_amount, uint _token_amount)
         public
     {
 
-        // 1 ->
-        
+        ERC20 token = ERC20(_token);
+
         OMGToken.transferFrom(msg.sender, address(0xDEAD), _omg_amount);
-        
-        // <- 1
-
-    }
-
-    function foo(address token)
-        public
-    {
-        
-        // 1
-        // OMGToken.transferFrom(msg.sender, address(0xDEAD), 10);
-
-        // 2
-        // OMG_ERC20 omg = OMG_ERC20(token);
-        // omg.transferFrom(msg.sender, address(0xDEAD), 10);
-
-        // 3 : does not work !
-        // ERC20 otherToken = ERC20(token);
-        // otherToken.transferFrom(msg.sender, address(0xDEAD), 10);
-
-        // 4
-        // OMGToken.approve(0xDEAD, 1000);
-
-        // 5
-        ERC20 otherToken = ERC20(token);
-        otherToken.approve(0xDEAD, 1000);
-
-        // 6 
-        // OMG_ERC20 omg = OMG_ERC20(token);
-        // omg.approve(0xDEAD, 1000);
-
-        // omg.transfer(0xDEAD, 11);
-        
-        // uint x = omg.balanceOf(0xDEAD);
+        token.transfer(msg.sender, _token_amount);
 
     }
 
