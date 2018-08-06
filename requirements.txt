@@ -2,5 +2,5 @@ pytest-xdist
 flake8
 web3
 py-solc
-ethereum==2.1.5
-eth_tester
+ethereum
+

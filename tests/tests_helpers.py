@@ -1,4 +1,5 @@
 import pytest
+import os
 from solc import compile_files
 from web3.auto import w3 as _w3
 
@@ -39,7 +40,10 @@ def non_operator(operator, accounts):
 
 
 def compile_source_file(file_path):
-    return compile_files([file_path])
+    current_directory = os.path.dirname(__file__)
+    project_root = os.path.join(current_directory, '..')
+    project_root = os.path.normpath(project_root)
+    return compile_files([file_path], allow_paths=project_root)
 
 
 def deploy_contract(w3, contract_interface, deploy_args=None):
