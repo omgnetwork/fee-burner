@@ -65,6 +65,11 @@ contract FeeBurner {
         _;
     }
 
+    modifier supportedToken(address token){
+        require(exchangeRates[token].nominator != 0);
+        _;
+    }
+
     /**
      * @dev Constructor
      * 
@@ -121,10 +126,10 @@ contract FeeBurner {
     /**
      * @dev Adds support for some token
      * 
-     * @notice By setting _token address to 0, support for Ehter can be added
+     * @notice By setting _token address to 0, support for Ether can be added
      *
      * @param _token contract address of ERC20 token, or 0 for Ether, which support should be added
-     * @param _nominator nominator of intial exchange rate. See ExchangeRate struct.
+     * @param _nominator nominator of initial exchange rate. See ExchangeRate struct.
      * @param _denominator denominator of initial exchange rate. See ExchangeRate struct.   
      */
     function addSupportFor(address _token, uint _nominator, uint _denominator)
@@ -139,9 +144,18 @@ contract FeeBurner {
         //TODO: Should I emit an event ?
     }
 
+    //TODO: add documentation
     function exchange(address _token, uint _nominator, uint _denominator, uint _omg_amount, uint _token_amount)
         public
+        supportedToken(_token)
     {
+
+        ExchangeRate memory currentRate = exchangeRates[_token];
+        require(_nominator == currentRate.nominator);
+        require(_denominator == currentRate.denominator);
+
+        //NOTE: If the sender's offer has higher rate than the current one, the transaction is valid.
+        require(_omg_amount.mul(currentRate.denominator) >= _token_amount.mul(currentRate.nominator));
 
         ERC20 token = ERC20(_token);
 
@@ -154,7 +168,11 @@ contract FeeBurner {
      * Public view functions
      */
 
-     
+    /*
+     * Private functions
+     */
+
+
 }
 
 

@@ -112,7 +112,6 @@ def test_failure_when_adding_already_supported_token(fee_burner, operator, other
 
 
 def test_exchange_omg_for_some_token(non_operator, operator, omg_token, fee_burner, other_token):
-
     # given: added support for some token and
     fee_burner.transact({'from': operator}).addSupportFor(other_token.address, 1, 1)
     other_token.transact({'from': operator}).transfer(fee_burner.address, SMALL_AMOUNT)
@@ -127,6 +126,80 @@ def test_exchange_omg_for_some_token(non_operator, operator, omg_token, fee_burn
     # then: user has received token and OMGs have been burnt
     assert omg_token.call().balanceOf(DEAD_ADDRESS) == 1
     assert other_token.call().balanceOf(non_operator) == user_initial_balance + 1
+
+
+def test_exchange_at_invalid_rate(non_operator, omg_token, fee_burner, other_token):
+    # given: added support for some token and
+    fee_burner.transact().addSupportFor(other_token.address, 1, 1)
+    other_token.transact().transfer(fee_burner.address, SMALL_AMOUNT)
+
+    # given: a user adds adds allowance on OMG contract and user has some initial tokens
+    omg_token.transact({'from': non_operator}).approve(fee_burner.address, SMALL_AMOUNT)
+    user_initial_balance = other_token.call().balanceOf(non_operator)
+
+    # when: the user sends an exchange demand OMG for other token at rate 2,1 (not current rate)
+    # then: error
+    with pytest.raises(ValueError):
+        fee_burner.transact({'from': non_operator}).exchange(other_token.address, 2, 1, 1, 1)
+
+    # when: the user sends an exchange demand OMG for other token at valid rate, but amounts aren't at this rate
+    # then: error
+    with pytest.raises(ValueError):
+        fee_burner.transact({'from': non_operator}).exchange(other_token.address, 1, 1, 1, 2)
+
+    # TODO: probably I needn't check this
+    assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 0
+    assert other_token.functions.balanceOf(non_operator).call() == user_initial_balance
+
+
+def test_exchange_when_user_has_not_allowed_transfer(non_operator, omg_token, fee_burner, other_token):
+    # given: added support for some token
+    fee_burner.functions.addSupportFor(other_token.address, 1, 1).transact()
+    other_token.functions.transfer(fee_burner.address, SMALL_AMOUNT).transact()
+
+    # when: user sends an exchange demand not having allowed for the transfer
+    # then: error
+    with pytest.raises(ValueError):
+        fee_burner.transact({'from': non_operator}).exchange(other_token.address, 1, 1, 1, 1)
+
+    assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 0
+    assert other_token.functions.balanceOf(fee_burner.address).call() == SMALL_AMOUNT
+
+
+def test_exchange_when_user_does_not_have_funds(accounts, omg_token, fee_burner, other_token):
+
+    user = accounts[5]
+
+    # given: added support for some token and
+    fee_burner.functions.addSupportFor(other_token.address, 1, 1).transact()
+    other_token.functions.transfer(fee_burner.address, SMALL_AMOUNT).transact()
+
+    # given: a user adds adds allowance on OMG contract
+    omg_token.transact({'from': user}).approve(fee_burner.address, SMALL_AMOUNT)
+
+    # when: user sends an exchange demand not having allowed for the transfer
+    # then: error
+    with pytest.raises(ValueError):
+        fee_burner.transact({'from': user}).exchange(other_token.address, 1, 1, 1, 1)
+
+    assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 0
+    assert other_token.functions.balanceOf(fee_burner.address).call() == SMALL_AMOUNT
+
+
+def test_exchange_when_fee_burner_does_not_have_funds(operator, non_operator, omg_token, fee_burner, other_token):
+    # given: added support for some token and
+    fee_burner.transact({'from': operator}).addSupportFor(other_token.address, 1, 1)
+
+    # given: a user adds adds allowance on OMG contract and user has some initial tokens
+    omg_token.transact({'from': non_operator}).approve(fee_burner.address, SMALL_AMOUNT)
+    user_initial_balance = other_token.call().balanceOf(non_operator)
+
+    # when: the user sends an exchange demand OMG for other token at rate 1,1 (initial rate),
+    # then: error
+    with pytest.raises(ValueError):
+        fee_burner.transact({'from': non_operator}).exchange(other_token.address, 1, 1, 1, 1)
+
+    assert other_token.call().balanceOf(non_operator) == user_initial_balance
 
 
 def test_set_new_ether_exchange_rate(fee_burner):
