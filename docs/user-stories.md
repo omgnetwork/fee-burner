@@ -33,9 +33,9 @@ In the following text one can find use cases of fee-burner.
 1. User checks exchange rate established by the operator.
 1. User sends a transfer approval to the `OmiseGO` contract. 
 1. User sends an exchange request to the `fee-burner`.
-1.  `Fee-burner` checks requested exchange rate with the one currently valid.
+1. `Fee-burner` checks requested exchange rate with the one currently valid.
 1. `Fee-burner` atomically does the following actions:
-    1. Sends user's `OMG` tokens to 0xdead address.
+    1. Sends user's `OMG` tokens to 0xDEAD address.
     1. Sends requested token to the user's address.  
 
 
