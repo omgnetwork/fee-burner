@@ -30,23 +30,23 @@ contract FeeBurner {
      * @notice the exchange rate is a ratio of OMG tokens to otherTokens 
      * @notice ratio = OMGTokens/otherTokens = nominator/denominator
      */
-    struct ExchangeRate { 
+    struct Rate {
         uint nominator;
         uint denominator;
     } 
 
-    struct NewExchangeRate {
+    struct ExchangeRate {
         uint blockNo;
-        ExchangeRate rate;
+        Rate rate;
     }
 
     address public operator;
     OMG_ERC20 public OMGToken;
 
-    uint constant public NEW_RATE_MATURITY_MARGIN = 100;
+    uint constant public NEW_RATE_MATURITY_MARGIN = 5;
 
     mapping (address => ExchangeRate) public oldExchangeRates;
-    mapping (address => NewExchangeRate) public newExchangeRates;
+    mapping (address => ExchangeRate) public exchangeRates;
 
     /*
      * Modifiers
@@ -63,7 +63,7 @@ contract FeeBurner {
     }
 
     modifier supportedToken(address token){
-        require(oldExchangeRates[token].nominator != 0);
+        require(exchangeRates[token].blockNo != 0);
         _;
     }
 
@@ -93,17 +93,42 @@ contract FeeBurner {
      */
 
     function () public payable {}
-    
+
     /**
-     * @dev Sets new exchange rate for a specified token. 
-     * 
-     * @notice Note that the new rate will automatically take  
+     * @dev Adds support for some token
+     *
+     * @notice By setting _token address to 0, support for Ether can be added
+     *
+     * @param _token contract address of ERC20 token, or 0 for Ether, which support should be added
+     * @param _nominator nominator of initial exchange rate. See ExchangeRate struct.
+     * @param _denominator denominator of initial exchange rate. See ExchangeRate struct.
+     */
+    function addSupportFor(address _token, uint _nominator, uint _denominator)
+        public
+        onlyOperator
+        checkRate(_nominator, _denominator)
+    {
+
+            require(exchangeRates[_token].blockNo == 0);
+
+            ExchangeRate memory exchangeRate = ExchangeRate(block.number, Rate(_nominator, _denominator));
+
+            oldExchangeRates[_token] = exchangeRate;
+            exchangeRates[_token] = exchangeRate;
+
+            //TODO: Should I emit an event ?
+    }
+
+    /**
+     * @dev Sets new exchange rate for a specified token.
+     *
+     * @notice Note that the new rate will automatically take
      *         effect after NEW_RATE_MATURITY_MARGIN number of blocks.
      * @notice Once new rate is set it cannot be changed until it has taken effect.
-     * 
+     *
      * @param _token contract address of the ERC20 token, which rate is changed
      * @param _nominator nominator of the new exchange rate. See ExchangeRate struct.
-     * @param _denominator denominator of the new exchange rate. See ExchangeRate struct.  
+     * @param _denominator denominator of the new exchange rate. See ExchangeRate struct.
      */
     function setExchangeRate(address _token, uint _nominator, uint _denominator)
         public
@@ -111,34 +136,27 @@ contract FeeBurner {
         supportedToken(_token)
         checkRate(_nominator, _denominator)
     {
+
         require(checkMaturityPeriodPassed(_token));
 
-        newExchangeRates[_token] = NewExchangeRate(block.number, ExchangeRate(_nominator, _denominator));
+        oldExchangeRates[_token] = exchangeRates[_token];
+        exchangeRates[_token] = ExchangeRate(block.number, Rate(_nominator, _denominator));
 
     }
 
 
     /**
-     * @dev Adds support for some token
-     * 
-     * @notice By setting _token address to 0, support for Ether can be added
+     * @dev Exchanges OMGs for the given token and burns received OMGs
      *
-     * @param _token contract address of ERC20 token, or 0 for Ether, which support should be added
-     * @param _nominator nominator of initial exchange rate. See ExchangeRate struct.
-     * @param _denominator denominator of initial exchange rate. See ExchangeRate struct.   
+     * @param _token contract address of ERC20 token, or 0 for Ether
+     * @param _nominator nominator of the rate at which the user wants to make the exchange
+     * @param _denominator denominator of the rate at which the user wants to make the exchange
+     * @param _omg_amount amount of OMGs to be exchanged and burnt
+     * @param _token_amount amount of ERC20 tokens to be exchanged
+     *
+     * @notice Rate proposed by the user must equal either to newExchangeRate or to oldExchangeRate.
+     * @notice Rate cannot equal to the oldExchangeRate when the maturity period of the new rate has passed.  
      */
-    function addSupportFor(address _token, uint _nominator, uint _denominator)
-        public
-        onlyOperator
-        checkRate(_nominator, _denominator)
-    {   
-
-        require(oldExchangeRates[_token].nominator == 0);
-
-        oldExchangeRates[_token] = ExchangeRate(_nominator, _denominator);
-        //TODO: Should I emit an event ?
-    }
-
     function exchange(address _token, uint _nominator, uint _denominator, uint _omg_amount, uint _token_amount)
         public
         supportedToken(_token)
@@ -149,9 +167,9 @@ contract FeeBurner {
         //NOTE: Sender may offer more OMGs than demanded by the exchange rate, the exchange is then valid.
         require(_omg_amount.mul(_denominator) >= _token_amount.mul(_nominator));
 
-        ERC20 token = ERC20(_token);
-
         OMGToken.transferFrom(msg.sender, address(0xDEAD), _omg_amount);
+
+        ERC20 token = ERC20(_token);
         token.transfer(msg.sender, _token_amount);
 
     }
@@ -160,35 +178,56 @@ contract FeeBurner {
      * Public view functions
      */
 
-
-    function getNewExchangeRate(address _token)
+    /**
+     * @dev Returns flat pending exchange rate of the given token. 
+     * 
+     * @param _token address of an ERC20 token, or 0 in case of Ethereum
+     */
+    function getExchangeRate(address _token)
         public
         view
         returns (uint, uint, uint)
     {
-        NewExchangeRate memory newRate = newExchangeRates[_token];
-        return (newRate.blockNo, newRate.rate.nominator, newRate.rate.denominator);
+        ExchangeRate memory exchangeRate = exchangeRates[_token];
+        return (exchangeRate.blockNo, exchangeRate.rate.nominator, exchangeRate.rate.denominator);
     }
+
+    /**
+     *
+     */
+    function getOldExchangeRate(address _token)
+        public
+        view
+        returns (uint, uint, uint)
+    {
+        ExchangeRate memory exchangeRate = oldExchangeRates[_token];
+        return (exchangeRate.blockNo, exchangeRate.rate.nominator, exchangeRate.rate.denominator);
+    }
+
     /*
      * Private functions
      */
 
+
+    /**
+     * @notice Should be called having previously checked whether the token is supported
+     */
     function checkRateValidity(address _token, uint _nominator, uint _denominator)
         private
         view
         returns (bool)
     {
 
-        NewExchangeRate memory newRate = newExchangeRates[_token];
+        Rate memory rate = exchangeRates[_token].rate;
 
         //NOTE : _nominator and _denominator have once been checked against zero values
-        if (newRate.rate.nominator == _nominator && newRate.rate.denominator == _denominator){
+        if (rate.nominator == _nominator && rate.denominator == _denominator){
             return true;
         }
 
-        if (!checkMaturityPeriodPassed(_token) || newRate.blockNo == 0){
-            ExchangeRate memory oldRate = oldExchangeRates[_token];
-            if (oldRate.nominator == _nominator && oldRate.denominator == _denominator){
+        if (!checkMaturityPeriodPassed(_token)){
+            rate = oldExchangeRates[_token].rate;
+            if (rate.nominator == _nominator && rate.denominator == _denominator){
                 return true;
             }
         }
@@ -197,22 +236,21 @@ contract FeeBurner {
 
     }
 
+
+    /**
+     * @notice Should be called having previously checked whether the token is supported
+     */
     function checkMaturityPeriodPassed(address _token)
         private
         view
         returns (bool)
     {
-        NewExchangeRate memory newRate = newExchangeRates[_token];
 
-        return newRate.blockNo.add(NEW_RATE_MATURITY_MARGIN) <= block.number;
+        uint blockNo = exchangeRates[_token].blockNo;
+
+        return blockNo.add(NEW_RATE_MATURITY_MARGIN) <= block.number;
 
     }
 
 }
-
-
-//TODO: add documentation
-
-
-
 
