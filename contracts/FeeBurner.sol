@@ -6,7 +6,7 @@ import "./math/SafeMath.sol";
 
 /**
  * @title FeeBurner
- * @author Piotr Zelazko <pitor.zelazko@icloud.com>
+ * @author Piotr Zelazko <pitor.zelazko@imapp.com>
  * @dev TODO:
  */
 contract FeeBurner { 
