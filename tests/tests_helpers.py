@@ -39,10 +39,30 @@ def non_operator(operator, accounts):
             return user
 
 
+@pytest.fixture()
+def provider(w3):
+    for provider in w3.providers:
+        if provider.isConnected:
+            return provider
+    raise EnvironmentError("Could not find any connected provider.")
+
+
+def increase_time(provider, time):
+    result = provider.make_request("evm_increaseTime", [time])
+    return result['result']
+
+
+def mine_blocks(provider, blocks_number):
+    for _ in range(blocks_number):
+        provider.make_request('evm_mine', [])
+
+
 def compile_source_file(file_path):
+
     current_directory = os.path.dirname(__file__)
     project_root = os.path.join(current_directory, '..')
     project_root = os.path.normpath(project_root)
+
     return compile_files([file_path], allow_paths=project_root)
 
 

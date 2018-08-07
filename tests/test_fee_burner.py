@@ -79,7 +79,7 @@ def test_add_support_for_some_token(fee_burner, other_token, operator):
     fee_burner.functions.addSupportFor(other_token.address, 1, 123).transact()
 
     # then: this token is supported
-    assert fee_burner.functions.exchangeRates(other_token.address).call() != [0, 0]
+    assert fee_burner.functions.oldExchangeRates(other_token.address).call() != [0, 0]
 
 
 def test_add_support_for_a_token_by_a_non_operator(fee_burner, non_operator, other_token):
@@ -140,7 +140,7 @@ def test_exchange_at_invalid_rate(non_operator, omg_token, fee_burner, other_tok
     # when: the user sends an exchange demand OMG for other token at rate 2,1 (not current rate)
     # then: error
     with pytest.raises(ValueError):
-        fee_burner.transact({'from': non_operator}).exchange(other_token.address, 2, 1, 1, 1)
+        fee_burner.transact({'from': non_operator}).exchange(other_token.address, 2, 1, 2, 1)
 
     # when: the user sends an exchange demand OMG for other token at valid rate, but amounts aren't at this rate
     # then: error
@@ -207,7 +207,7 @@ def test_set_new_ether_exchange_rate(fee_burner):
     fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 1, 1).transact()
 
     # then: new exchange rate is pending
-    pending_rate = fee_burner.functions.pendingExchangeRates(ZERO_ADDRESS).call()
+    pending_rate = fee_burner.functions.getNewExchangeRate(ZERO_ADDRESS).call()
     assert pending_rate[-2:] == [1, 1]
 
 
@@ -218,7 +218,7 @@ def test_change_exchange_rate_by_a_non_operator(fee_burner, accounts, non_operat
 
     # then: rate has not changed
 
-    assert fee_burner.functions.pendingExchangeRates(ZERO_ADDRESS).call() == [0, 0, 0]
+    assert fee_burner.functions.getNewExchangeRate(ZERO_ADDRESS).call() == [0, 0, 0]
 
 
 def test_set_invalid_exchange_rate(fee_burner, operator):
@@ -246,3 +246,54 @@ def test_setting_new_rate_while_already_pending_rate_set(fee_burner, operator):
     # then: expect error
     with pytest.raises(ValueError):
         fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 1, 1).transact()
+
+
+def test_setting_new_rate_when_maturity_period_has_come(w3, provider, fee_burner):
+    # given: pending exchange rate
+    fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 11, 22).transact()
+
+    # when: maturity period has come
+    mine_blocks(provider, fee_burner.call().NEW_RATE_MATURITY_MARGIN() + 1)
+    block_no = w3.eth.blockNumber
+
+    # then: operator can once more change the exchange rate
+    fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 22, 33).transact()
+    assert fee_burner.functions.getNewExchangeRate(ZERO_ADDRESS).call() == [block_no + 1, 22, 33]
+
+
+def test_during_maturity_period_both_rates_should_be_valid(operator, non_operator, fee_burner, other_token, omg_token):
+    # given: pending exchange rate, set allowances and non-zero balances
+    fee_burner.transact({'from': operator}).addSupportFor(other_token.address, 1, 1)
+    fee_burner.transact().setExchangeRate(other_token.address, 2, 1)
+
+    other_token.transact().transfer(fee_burner.address, 3*SMALL_AMOUNT)
+    omg_token.transact({'from': non_operator}).approve(fee_burner.address, HUGE_AMOUNT)
+
+    # then: both rates are valid
+    fee_burner.transact({'from': non_operator}).exchange(other_token.address, 1, 1, 1, 1)
+    fee_burner.transact({'from': non_operator}).exchange(other_token.address, 2, 1, 2, 1)
+
+    assert omg_token.call().balanceOf(DEAD_ADDRESS) == 3
+
+
+def test_after_maturity_period_only_new_rate_is_valid\
+                (provider, operator, non_operator, fee_burner, omg_token, other_token):
+
+    # given: pending exchange rate, set allowances and non-zero balances
+    fee_burner.transact({'from': operator}).addSupportFor(other_token.address, 1, 1)
+    fee_burner.transact().setExchangeRate(other_token.address, 2, 1)
+
+    other_token.transact().transfer(fee_burner.address, 3*SMALL_AMOUNT)
+    omg_token.transact({'from': non_operator}).approve(fee_burner.address, HUGE_AMOUNT)
+
+    # when: maturity period has come
+    mine_blocks(provider, fee_burner.call().NEW_RATE_MATURITY_MARGIN() + 1)
+
+    # then: old rate is invalid
+    with pytest.raises(ValueError):
+        fee_burner.transact({'from': non_operator}).exchange(other_token.address, 1, 1, 1, 1)
+
+    # then: new rate is valid
+    fee_burner.transact({'from': non_operator}).exchange(other_token.address, 2, 1, 2, 1)
+
+    assert omg_token.call().balanceOf(DEAD_ADDRESS) == 2
