@@ -254,6 +254,38 @@ def test_set_invalid_exchange_rate(fee_burner, operator):
         fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 1, 0).transact()
 
 
+def test_events_emission_when_adding_support_for_a_token(w3, fee_burner, other_token):
+    event_filter = fee_burner.events.ExchangeRateChanged.createFilter(fromBlock='latest')
+    # when: operator adds support for a new token
+    fee_burner.functions.addSupportFor(other_token.address, 1, 123).transact()
+
+    # then: ExchangeRateChanged event was emitted
+    emitted_events = event_filter.get_new_entries()
+
+    assert len(emitted_events) == 1
+    assert emitted_events[0]['args']['token'] == other_token.address
+    assert emitted_events[0]['args']['blockNo'] == w3.eth.blockNumber
+    assert emitted_events[0]['args']['nominator'] == 1
+    assert emitted_events[0]['args']['denominator'] == 123
+
+
+def test_events_emission_when_changing_rate(w3, fee_burner, other_token):
+    event_filter = fee_burner.events.ExchangeRateChanged.createFilter(fromBlock='latest')
+
+    # when: exchange rate is changed
+    fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 11, 12).transact()
+
+    # then: ExchangeRateChanged event was emitted
+    emitted_events = event_filter.get_new_entries()
+
+    assert len(emitted_events) == 1
+    assert emitted_events[0]['args']['blockNo'] == w3.eth.blockNumber
+    assert emitted_events[0]['args']['nominator'] == 11
+    assert emitted_events[0]['args']['denominator'] == 12
+    assert emitted_events[0]['args']['token'] == ZERO_ADDRESS
+
+
+
 def test_set_new_rate_of_an_unsupported_token(fee_burner, operator, other_token):
     # when: the operator tries to set a new exchange rate to a non existent token
     # then: expect error
@@ -326,3 +358,4 @@ def test_after_maturity_period_only_new_rate_is_valid\
     fee_burner.functions.exchange(other_token.address, 2, 1, 2, 1).transact({'from': non_operator})
 
     assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 2
+

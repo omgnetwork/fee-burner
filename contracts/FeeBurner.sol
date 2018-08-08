@@ -18,7 +18,7 @@ contract FeeBurner {
     */
     event ExchangeRateChanged(
         address token,
-        uint blokcNo,
+        uint blockNo,
         uint nominator,
         uint denominator
     );
