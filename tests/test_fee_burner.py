@@ -228,7 +228,7 @@ def test_set_new_ether_exchange_rate(fee_burner, w3):
 
     # then: exchange rate is set and the old one is still active
     assert fee_burner.functions.getExchangeRate(ZERO_ADDRESS).call() == [w3.eth.blockNumber, 11, 11]
-    assert fee_burner.functions.getOldExchangeRate(ZERO_ADDRESS).call() == initial_rate
+    assert fee_burner.functions.getPreviousExchangeRate(ZERO_ADDRESS).call() == initial_rate
 
 
 def test_change_exchange_rate_by_a_non_operator(fee_burner, accounts, non_operator):
@@ -283,7 +283,7 @@ def test_setting_new_rate_when_maturity_period_has_passed(w3, provider, fee_burn
     # then: operator can once more change the exchange rate
     fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 22, 33).transact()
     assert fee_burner.functions.getExchangeRate(ZERO_ADDRESS).call() == [block_no + 1, 22, 33]
-    assert fee_burner.functions.getOldExchangeRate(ZERO_ADDRESS).call() == changed_rate
+    assert fee_burner.functions.getPreviousExchangeRate(ZERO_ADDRESS).call() == changed_rate
 
 
 def test_during_maturity_period_both_rates_should_be_valid(provider, non_operator, fee_burner, other_token, omg_token):

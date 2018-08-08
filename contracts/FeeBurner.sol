@@ -45,7 +45,7 @@ contract FeeBurner {
 
     uint constant public NEW_RATE_MATURITY_MARGIN = 5;
 
-    mapping (address => ExchangeRate) public oldExchangeRates;
+    mapping (address => ExchangeRate) public previousExchangeRates;
     mapping (address => ExchangeRate) public exchangeRates;
 
     /*
@@ -113,7 +113,7 @@ contract FeeBurner {
 
             ExchangeRate memory exchangeRate = ExchangeRate(block.number, Rate(_nominator, _denominator));
 
-            oldExchangeRates[_token] = exchangeRate;
+            previousExchangeRates[_token] = exchangeRate;
             exchangeRates[_token] = exchangeRate;
 
             //TODO: Should I emit an event ?
@@ -139,7 +139,7 @@ contract FeeBurner {
 
         require(checkMaturityPeriodPassed(_token));
 
-        oldExchangeRates[_token] = exchangeRates[_token];
+        previousExchangeRates[_token] = exchangeRates[_token];
         exchangeRates[_token] = ExchangeRate(block.number, Rate(_nominator, _denominator));
 
     }
@@ -207,12 +207,12 @@ contract FeeBurner {
     /**
      *
      */
-    function getOldExchangeRate(address _token)
+    function getPreviousExchangeRate(address _token)
         public
         view
         returns (uint, uint, uint)
     {
-        ExchangeRate memory exchangeRate = oldExchangeRates[_token];
+        ExchangeRate memory exchangeRate = previousExchangeRates[_token];
         return (exchangeRate.blockNo, exchangeRate.rate.nominator, exchangeRate.rate.denominator);
     }
 
@@ -238,7 +238,7 @@ contract FeeBurner {
         }
 
         if (!checkMaturityPeriodPassed(_token)){
-            rate = oldExchangeRates[_token].rate;
+            rate = previousExchangeRates[_token].rate;
             if (rate.nominator == _nominator && rate.denominator == _denominator){
                 return true;
             }
