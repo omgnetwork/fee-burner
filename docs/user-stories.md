@@ -50,6 +50,6 @@ In the following text one can find use cases of fee-burner.
 3. `Fee-burner` checks whether operation can be completed.
 4. `Fee-burner` sets new exchange rate.
 5. During a clearance period both rates are valid.
-6. After the clearance period only newly set exchange rate is valid. 
+6. After the clearance period only newly set exchange rate is the only valid. 
 
 **Note: the clearance period is hard-coded in the fee burner contract and cannot be changed**
