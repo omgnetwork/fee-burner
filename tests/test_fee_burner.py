@@ -145,6 +145,23 @@ def test_exchange_omg_for_ether(w3, non_operator, omg_token, fee_burner):
     assert w3.eth.getBalance(non_operator) <= user_initial_balance + 100000
 
 
+def test_exchange_when_user_offers_more_omgs_then_needed(w3, non_operator, omg_token, fee_burner, other_token):
+    # given: added support for some token and
+    fee_burner.functions.addSupportFor(other_token.address, 1, 1).transact()
+    other_token.functions.transfer(fee_burner.address, SMALL_AMOUNT).transact()
+
+    # given: a user adds adds allowance on OMG contract and user has some initial tokens
+    omg_token.functions.approve(fee_burner.address, HUGE_AMOUNT).transact({'from': non_operator})
+    user_initial_balance = other_token.functions.balanceOf(non_operator).call()
+
+    # when: the user sends offer at valid rate, but sends to much OMGs
+    fee_burner.functions.exchange(other_token.address, 1, 1, 200, 1).transact({'from': non_operator})
+
+    # then: the transaction was valid and tokens were transferred
+    assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 200
+    assert other_token.functions.balanceOf(non_operator).call() == user_initial_balance + 1
+
+
 def test_exchange_at_invalid_rate(non_operator, omg_token, fee_burner, other_token):
     # given: added support for some token and
     fee_burner.functions.addSupportFor(other_token.address, 1, 1).transact()
@@ -283,7 +300,6 @@ def test_events_emission_when_changing_rate(w3, fee_burner, other_token):
     assert emitted_events[0]['args']['nominator'] == 11
     assert emitted_events[0]['args']['denominator'] == 12
     assert emitted_events[0]['args']['token'] == ZERO_ADDRESS
-
 
 
 def test_set_new_rate_of_an_unsupported_token(fee_burner, operator, other_token):

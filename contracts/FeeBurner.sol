@@ -93,7 +93,7 @@ contract FeeBurner {
      * @dev Receives Eth    
      */
 
-    function receive() public payable {}
+    function receive() public payable {} //TODO: rename it to "()"?
 
     /**
      * @dev Adds support for some token
@@ -109,7 +109,7 @@ contract FeeBurner {
         onlyOperator
         checkRate(_nominator, _denominator)
     {
-
+            // Checks whether such a token hasn't been supported yet
             require(exchangeRates[_token].blockNo == 0);
 
             ExchangeRate memory exchangeRate = ExchangeRate(block.number, Rate(_nominator, _denominator));
@@ -117,7 +117,7 @@ contract FeeBurner {
             previousExchangeRates[_token] = exchangeRate;
             exchangeRates[_token] = exchangeRate;
 
-            //TODO: Should I emit an event ?
+            //TODO: Should I emit an event ? Maybe sth like AddedSupport(token)
             emit ExchangeRateChanged(_token, block.number, _nominator, _denominator);
     }
 
@@ -158,17 +158,16 @@ contract FeeBurner {
      * @param _omg_amount amount of OMGs to be exchanged and burnt
      * @param _token_amount amount of ERC20 tokens to be exchanged
      *
-     * @notice Rate proposed by the user must equal either to newExchangeRate or to oldExchangeRate.
-     * @notice Rate cannot equal to the oldExchangeRate when the maturity period of the new rate has passed.  
+     * @notice Rate proposed by the user must equal either to exchangeRate or to previousExchangeRate.
+     * @notice Rate cannot equal to the previousExchangeRate when the maturity period of the new rate has passed.
+     * @notice Sender may offer more OMGs than demanded by the exchange rate, the exchange/transaction is then valid.
      */
     function exchange(address _token, uint _nominator, uint _denominator, uint _omg_amount, uint _token_amount)
         public
         supportedToken(_token)
     {
-
         require(checkRateValidity(_token, _nominator, _denominator));
 
-        //NOTE: Sender may offer more OMGs than demanded by the exchange rate, the exchange is then valid.
         require(_omg_amount.mul(_denominator) >= _token_amount.mul(_nominator));
 
         OMGToken.transferFrom(msg.sender, address(0xDEAD), _omg_amount);
