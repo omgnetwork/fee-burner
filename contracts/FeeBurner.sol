@@ -18,6 +18,7 @@ contract FeeBurner {
     */
     event ExchangeRateChanged(
         address token,
+        uint blokcNo,
         uint nominator,
         uint denominator
     );
@@ -117,6 +118,7 @@ contract FeeBurner {
             exchangeRates[_token] = exchangeRate;
 
             //TODO: Should I emit an event ?
+            emit ExchangeRateChanged(_token, block.number, _nominator, _denominator);
     }
 
     /**
@@ -141,6 +143,8 @@ contract FeeBurner {
 
         previousExchangeRates[_token] = exchangeRates[_token];
         exchangeRates[_token] = ExchangeRate(block.number, Rate(_nominator, _denominator));
+
+        emit ExchangeRateChanged(_token, block.number, _nominator, _denominator);
 
     }
 
