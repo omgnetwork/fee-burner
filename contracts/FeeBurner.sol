@@ -92,7 +92,7 @@ contract FeeBurner {
      * @dev Receives Eth    
      */
 
-    function () public payable {}
+    function receive() public payable {}
 
     /**
      * @dev Adds support for some token
@@ -169,9 +169,21 @@ contract FeeBurner {
 
         OMGToken.transferFrom(msg.sender, address(0xDEAD), _omg_amount);
 
-        ERC20 token = ERC20(_token);
-        token.transfer(msg.sender, _token_amount);
+        if (_token == address(0)){
+            msg.sender.transfer(_token_amount);
+        }
+        else {
+            ERC20 token = ERC20(_token);
+            token.transfer(msg.sender, _token_amount);
+        }
 
+    }
+
+    //TODO: should I leave this convenience method ?
+    function exchange(uint _nominator, uint _denominator, uint _omg_amount, uint _ether_amount)
+        public
+    {
+        exchange(address(0), _nominator, _denominator, _omg_amount, _ether_amount);
     }
 
     /*

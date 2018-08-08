@@ -129,6 +129,22 @@ def test_exchange_omg_for_some_token(non_operator, omg_token, fee_burner, other_
     assert other_token.functions.balanceOf(non_operator).call() == user_initial_balance + 1
 
 
+def test_exchange_omg_for_ether(w3, non_operator, omg_token, fee_burner):
+    # given: a user adds adds allowance on OMG contract and user has some initial tokens
+    omg_token.functions.approve(fee_burner.address, HUGE_AMOUNT).transact({'from': non_operator})
+    fee_burner.functions.receive().transact({'value': 100000})
+
+    user_initial_balance = w3.eth.getBalance(non_operator)
+
+    # when: the user sends an exchange demand OMG for other token at rate 1,1 (initial rate)
+    fee_burner.functions.exchange(1, 1, 100000, 100000).transact({'from': non_operator})
+
+    # then: user has received token and OMGs have been burnt
+    assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 100000
+    assert w3.eth.getBalance(non_operator) > user_initial_balance
+    assert w3.eth.getBalance(non_operator) <= user_initial_balance + 100000
+
+
 def test_exchange_at_invalid_rate(non_operator, omg_token, fee_burner, other_token):
     # given: added support for some token and
     fee_burner.functions.addSupportFor(other_token.address, 1, 1).transact()
@@ -205,14 +221,14 @@ def test_exchange_when_fee_burner_does_not_have_funds(non_operator, omg_token, f
 
 def test_set_new_ether_exchange_rate(fee_burner, w3):
     # given: initial exchange rate
-    initial_rate = fee_burner.call().getExchangeRate(ZERO_ADDRESS)
+    initial_rate = fee_burner.functions.getExchangeRate(ZERO_ADDRESS).call()
 
     # when: an operator changes Ether exchange rate
-    fee_burner.transact().setExchangeRate(ZERO_ADDRESS, 11, 11)
+    fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 11, 11).transact()
 
     # then: exchange rate is set and the old one is still active
-    assert fee_burner.call().getExchangeRate(ZERO_ADDRESS) == [w3.eth.blockNumber, 11, 11]
-    assert fee_burner.call().getOldExchangeRate(ZERO_ADDRESS) == initial_rate
+    assert fee_burner.functions.getExchangeRate(ZERO_ADDRESS).call() == [w3.eth.blockNumber, 11, 11]
+    assert fee_burner.functions.getOldExchangeRate(ZERO_ADDRESS).call() == initial_rate
 
 
 def test_change_exchange_rate_by_a_non_operator(fee_burner, accounts, non_operator):
