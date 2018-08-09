@@ -352,8 +352,9 @@ def test_during_maturity_period_both_rates_should_be_valid(provider, non_operato
     assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 3
 
 
-def test_after_maturity_period_only_new_rate_is_valid\
-                (provider, operator, non_operator, fee_burner, omg_token, other_token):
+def test_after_maturity_period_only_new_rate_is_valid \
+ \
+    (provider, operator, non_operator, fee_burner, omg_token, other_token):
 
     # given: pending exchange rate, set allowances and non-zero balances
     fee_burner.functions.addSupportFor(other_token.address, 1, 1).transact()
@@ -376,3 +377,54 @@ def test_after_maturity_period_only_new_rate_is_valid\
 
     assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 2
 
+
+@pytest.mark.parametrize("nominator, denominator, omg_amount, token_amount", [
+    (1, 1, 1, 1),
+
+    (1, 1, 2, 1),
+    (1, 1, 1, 2),
+
+    (3, 4, 1, 1),
+    (4, 3, 1, 1),
+    (3, 4, 6, 7),
+    (4, 3, 7, 6),
+
+    (5, 7, 7, 10),
+    (5, 7, 8, 10),
+    (7, 5, 10, 7),
+    (7, 5, 10, 8),
+
+    (3, 4, 17, 24),
+    (3, 4, 19, 24),
+    (4, 3, 24, 17),
+    (4, 3, 24, 19),
+
+    (121, 73, 6, 4),
+    (73, 121, 4, 6),
+    (121, 73, 7, 4),
+    (73, 121, 4, 7),
+])
+def test_exchange_with_different_rates_and_amounts\
+                (fee_burner, other_token, omg_token, non_operator, nominator, denominator, omg_amount, token_amount):
+
+    # given: added support for some token and
+    fee_burner.functions.addSupportFor(other_token.address, nominator, denominator).transact()
+    other_token.functions.transfer(fee_burner.address, HUGE_AMOUNT).transact()
+
+    # given: a user adds adds allowance on OMG contract and user has some initial tokens
+    omg_token.functions.approve(fee_burner.address, HUGE_AMOUNT).transact({'from': non_operator})
+    user_initial_balance = other_token.functions.balanceOf(non_operator).call()
+
+    # when: the user sends an exchange demand OMG for other token at given
+
+    failed = False
+
+    try:
+        fee_burner.functions.exchange(other_token.address, nominator, denominator, omg_amount, token_amount)\
+            .transact({'from': non_operator})
+        assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == omg_amount
+        assert other_token.functions.balanceOf(non_operator).call() == user_initial_balance + token_amount
+    except ValueError:
+        failed = True
+    finally:
+        assert ((omg_amount / token_amount) < (nominator / denominator)) == failed
