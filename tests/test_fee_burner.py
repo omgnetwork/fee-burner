@@ -132,7 +132,7 @@ def test_exchange_omg_for_some_token(non_operator, omg_token, fee_burner, other_
 def test_exchange_omg_for_ether(w3, non_operator, omg_token, fee_burner):
     # given: a user adds adds allowance on OMG contract and user has some initial tokens
     omg_token.functions.approve(fee_burner.address, HUGE_AMOUNT).transact({'from': non_operator})
-    fee_burner.functions.receive().transact({'value': 100000})
+    w3.eth.sendTransaction({'to': fee_burner.address, 'value': 100000})
 
     user_initial_balance = w3.eth.getBalance(non_operator)
 

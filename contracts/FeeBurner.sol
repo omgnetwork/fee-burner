@@ -93,7 +93,7 @@ contract FeeBurner {
      * @dev Receives Eth    
      */
 
-    function receive() public payable {} //TODO: rename it to "()"?
+    function () public payable {}
 
     /**
      * @dev Adds support for some token
@@ -162,13 +162,13 @@ contract FeeBurner {
      * @notice Rate cannot equal to the previousExchangeRate when the maturity period of the new rate has passed.
      * @notice Sender may offer more OMGs than demanded by the exchange rate, the exchange/transaction is then valid.
      */
-    function exchange(address _token, uint _nominator, uint _denominator, uint _omg_amount, uint _token_amount)
+    function exchange(address _token, uint _rate_nominator, uint _rate_denominator, uint _omg_amount, uint _token_amount)
         public
         supportedToken(_token)
     {
-        require(checkRateValidity(_token, _nominator, _denominator));
+        require(checkRateValidity(_token, _rate_nominator, _rate_denominator));
 
-        require(_omg_amount.mul(_denominator) >= _token_amount.mul(_nominator));
+        require(_omg_amount.mul(_rate_denominator) >= _token_amount.mul(_rate_nominator));
 
         OMGToken.transferFrom(msg.sender, address(0xDEAD), _omg_amount);
 
