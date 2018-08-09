@@ -1,4 +1,4 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.24;
 
 import "./ERC20_token/ERC20.sol";
 import "./OMG_ERC20/OMG_ERC20.sol";
@@ -6,7 +6,7 @@ import "./math/SafeMath.sol";
 
 /**
  * @title FeeBurner
- * @author Piotr Zelazko <pitor.zelazko@imapp.com>
+ * @author Piotr Zelazko <pik694@GitHub>
  * @dev TODO:
  */
 contract FeeBurner { 
