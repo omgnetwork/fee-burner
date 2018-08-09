@@ -137,7 +137,7 @@ def test_exchange_omg_for_ether(w3, non_operator, omg_token, fee_burner):
     user_initial_balance = w3.eth.getBalance(non_operator)
 
     # when: the user sends an exchange demand OMG for other token at rate 1,1 (initial rate)
-    fee_burner.functions.exchange(1, 1, 100000, 100000).transact({'from': non_operator})
+    fee_burner.functions.exchange(ZERO_ADDRESS, 1, 1, 100000, 100000).transact({'from': non_operator})
 
     # then: user has received token and OMGs have been burnt
     assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 100000

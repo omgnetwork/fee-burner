@@ -49,25 +49,6 @@ contract FeeBurner {
     mapping (address => ExchangeRate) public previousExchangeRates;
     mapping (address => ExchangeRate) public exchangeRates;
 
-    /*
-     * Modifiers
-     */    
-    modifier onlyOperator(){
-        require(msg.sender == operator);
-        _;
-    }
-
-    modifier checkRate(uint nominator, uint denominator){
-        require(nominator > 0);
-        require(denominator > 0);
-        _;
-    }
-
-    modifier supportedToken(address token){
-        require(exchangeRates[token].blockNo != 0);
-        _;
-    }
-
     /**
      * @dev Constructor
      * 
@@ -106,11 +87,10 @@ contract FeeBurner {
      */
     function addSupportFor(address _token, uint _nominator, uint _denominator)
         public
-        onlyOperator
-        checkRate(_nominator, _denominator)
     {
-            // Checks whether such a token hasn't been supported yet
-            require(exchangeRates[_token].blockNo == 0);
+            require(isOperator(msg.sender));
+            require(isValidRate(_nominator, _denominator));
+            require(!isTokenSupported(_token));
 
             ExchangeRate memory exchangeRate = ExchangeRate(block.number, Rate(_nominator, _denominator));
 
@@ -133,11 +113,11 @@ contract FeeBurner {
      */
     function setExchangeRate(address _token, uint _nominator, uint _denominator)
         public
-        onlyOperator
-        supportedToken(_token)
-        checkRate(_nominator, _denominator)
     {
 
+        require(isOperator(msg.sender));
+        require(isValidRate(_nominator, _denominator));
+        require(isTokenSupported(_token));
         require(checkMaturityPeriodPassed(_token));
 
         previousExchangeRates[_token] = exchangeRates[_token];
@@ -163,10 +143,11 @@ contract FeeBurner {
      */
     function exchange(address _token, uint _rate_nominator, uint _rate_denominator, uint _omg_amount, uint _token_amount)
         public
-        supportedToken(_token)
     {
+        require(isTokenSupported(_token));
         require(checkRateValidity(_token, _rate_nominator, _rate_denominator));
 
+        // Check whether user proposed valid values
         require(_omg_amount.mul(_rate_denominator) >= _token_amount.mul(_rate_nominator));
 
         OMGToken.transferFrom(msg.sender, address(0xDEAD), _omg_amount);
@@ -179,13 +160,6 @@ contract FeeBurner {
             token.transfer(msg.sender, _token_amount);
         }
 
-    }
-
-    //TODO: should I leave this convenience method ?
-    function exchange(uint _nominator, uint _denominator, uint _omg_amount, uint _ether_amount)
-        public
-    {
-        exchange(address(0), _nominator, _denominator, _omg_amount, _ether_amount);
     }
 
     /*
@@ -277,6 +251,32 @@ contract FeeBurner {
         return blockNo.add(NEW_RATE_MATURITY_MARGIN) <= block.number;
 
     }
+
+    function isOperator(address _sender)
+        private
+        view
+        returns (bool)
+    {
+        return _sender == operator;
+    }
+
+    function isValidRate(uint _nominator, uint _denominator)
+        private
+        pure
+        returns(bool)
+    {
+        return _nominator > 0 && _denominator > 0;
+    }
+
+    function isTokenSupported(address _token)
+        private
+        view
+        returns (bool)
+    {
+        return exchangeRates[_token].blockNo != 0;
+    }
+
+
 
 }
 
