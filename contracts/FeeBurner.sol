@@ -75,8 +75,8 @@ contract FeeBurner {
      */
     constructor(address _OMGToken)
         public
-    {   
-        //TODO: should I check this ?
+    {
+
         require(_OMGToken != address(0));
 
         operator = msg.sender;
@@ -117,7 +117,6 @@ contract FeeBurner {
             previousExchangeRates[_token] = exchangeRate;
             exchangeRates[_token] = exchangeRate;
 
-            //TODO: Should I emit an event ? Maybe sth like AddedSupport(token)
             emit ExchangeRateChanged(_token, block.number, _nominator, _denominator);
     }
 
