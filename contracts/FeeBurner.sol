@@ -153,8 +153,8 @@ contract FeeBurner {
      * @dev Exchanges OMGs for the given token and burns received OMGs
      *
      * @param _token contract address of ERC20 token, or 0 for Ether
-     * @param _nominator nominator of the rate at which the user wants to make the exchange
-     * @param _denominator denominator of the rate at which the user wants to make the exchange
+     * @param _rate_nominator nominator of the rate at which the user wants to make the exchange
+     * @param _rate_denominator denominator of the rate at which the user wants to make the exchange
      * @param _omg_amount amount of OMGs to be exchanged and burnt
      * @param _token_amount amount of ERC20 tokens to be exchanged
      *
@@ -194,9 +194,14 @@ contract FeeBurner {
      */
 
     /**
-     * @dev Returns flat pending exchange rate of the given token. 
+     * @dev Returns flat exchange rate of the given token.
      * 
      * @param _token address of an ERC20 token, or 0 in case of Ethereum
+     *
+     * @return Newest exchange rate of the token in given format (block when the rate was set, rate's nominator, rate's denominator)
+     *
+     * @notice If given token is not supported, then (0, 0, 0) is returned
+     * @notice Token can surely by exchanged at the returned rate.
      */
     function getExchangeRate(address _token)
         public
@@ -208,7 +213,14 @@ contract FeeBurner {
     }
 
     /**
+     * @dev Returns flat previous exchange rate of the given token.
      *
+     * @param _token address of an ERC20 token, or 0 in case of Ethereum
+     *
+     * @return Previous exchange rate of the token in given format (block when the rate was set, rate's nominator, rate's denominator)
+     *
+     * @notice If given token is not supported, then (0, 0, 0) is returned
+     * @notice Token can be exchanged at the returned rate only before maturity period of the new rate has passed.
      */
     function getPreviousExchangeRate(address _token)
         public
