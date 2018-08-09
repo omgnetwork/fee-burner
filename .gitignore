@@ -26,11 +26,13 @@ erl_crash.dump
 *.pytest_cache/
 *.pyc
 
-populus/build/
+/build/
 
 *.trace
 callgrind.out.*
 
 *.log
+
+
 
 
