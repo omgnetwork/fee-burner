@@ -67,9 +67,6 @@ def fee_burner(w3, provider, omg_token):
         abi=contract_interface['abi']
     )
 
-    fee_burner_contract.transact().addSupportFor(ZERO_ADDRESS, 1, 1)
-    mine_blocks(provider, fee_burner_contract.call().NEW_RATE_MATURITY_MARGIN() + 1)
-
     return fee_burner_contract
 
 
@@ -131,6 +128,7 @@ def test_exchange_omg_for_some_token(non_operator, omg_token, fee_burner, other_
 
 def test_exchange_omg_for_ether(w3, non_operator, omg_token, fee_burner):
     # given: a user adds adds allowance on OMG contract and user has some initial tokens
+    fee_burner.transact().addSupportFor(ZERO_ADDRESS, 1, 1)
     omg_token.functions.approve(fee_burner.address, HUGE_AMOUNT).transact({'from': non_operator})
     w3.eth.sendTransaction({'to': fee_burner.address, 'value': 100000})
 
@@ -169,7 +167,6 @@ def test_exchange_at_invalid_rate(non_operator, omg_token, fee_burner, other_tok
 
     # given: a user adds adds allowance on OMG contract and user has some initial tokens
     omg_token.functions.approve(fee_burner.address, SMALL_AMOUNT).transact({'from': non_operator})
-    user_initial_balance = other_token.functions.balanceOf(non_operator).call()
 
     # when: the user sends an exchange demand OMG for other token at rate 2,1 (not current rate)
     # then: error
@@ -180,10 +177,6 @@ def test_exchange_at_invalid_rate(non_operator, omg_token, fee_burner, other_tok
     # then: error
     with pytest.raises(ValueError):
         fee_burner.functions.exchange(other_token.address, 1, 1, 1, 2).transact({'from': non_operator})
-
-    # TODO: probably I needn't check this
-    assert omg_token.functions.balanceOf(DEAD_ADDRESS).call() == 0
-    assert other_token.functions.balanceOf(non_operator).call() == user_initial_balance
 
 
 def test_exchange_when_user_has_not_allowed_transfer(non_operator, omg_token, fee_burner, other_token):
@@ -236,8 +229,10 @@ def test_exchange_when_fee_burner_does_not_have_funds(non_operator, omg_token, f
     assert other_token.functions.balanceOf(non_operator).call() == user_initial_balance
 
 
-def test_set_new_ether_exchange_rate(fee_burner, w3):
+def test_set_new_ether_exchange_rate(fee_burner, w3, provider):
     # given: initial exchange rate
+    fee_burner.transact().addSupportFor(ZERO_ADDRESS, 1, 1)
+    mine_blocks(provider, fee_burner.call().NEW_RATE_MATURITY_MARGIN() + 1)
     initial_rate = fee_burner.functions.getExchangeRate(ZERO_ADDRESS).call()
 
     # when: an operator changes Ether exchange rate
@@ -286,7 +281,9 @@ def test_events_emission_when_adding_support_for_a_token(w3, fee_burner, other_t
     assert emitted_events[0]['args']['denominator'] == 123
 
 
-def test_events_emission_when_changing_rate(w3, fee_burner, other_token):
+def test_events_emission_when_changing_rate(w3, provider, fee_burner, other_token):
+    fee_burner.transact().addSupportFor(ZERO_ADDRESS, 1, 1)
+    mine_blocks(provider, fee_burner.call().NEW_RATE_MATURITY_MARGIN() + 1)
     event_filter = fee_burner.events.ExchangeRateChanged.createFilter(fromBlock='latest')
 
     # when: exchange rate is changed
@@ -309,8 +306,10 @@ def test_set_new_rate_of_an_unsupported_token(fee_burner, operator, other_token)
         fee_burner.functions.setExchangeRate(other_token.address, 1, 1).transact()
 
 
-def test_setting_new_rate_when_maturity_period_has_not_passed(fee_burner, operator):
+def test_setting_new_rate_when_maturity_period_has_not_passed(provider, fee_burner):
     # given: pending exchange rate
+    fee_burner.transact().addSupportFor(ZERO_ADDRESS, 1, 1)
+    mine_blocks(provider, fee_burner.call().NEW_RATE_MATURITY_MARGIN() + 1)
     fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 11, 11).transact()
 
     # when: the operator tires to change the rate one more
@@ -321,6 +320,8 @@ def test_setting_new_rate_when_maturity_period_has_not_passed(fee_burner, operat
 
 def test_setting_new_rate_when_maturity_period_has_passed(w3, provider, fee_burner):
     # given: pending exchange rate
+    fee_burner.transact().addSupportFor(ZERO_ADDRESS, 1, 1)
+    mine_blocks(provider, fee_burner.call().NEW_RATE_MATURITY_MARGIN() + 1)
     fee_burner.functions.setExchangeRate(ZERO_ADDRESS, 11, 22).transact()
     changed_rate = fee_burner.functions.getExchangeRate(ZERO_ADDRESS).call()
 
