@@ -7,7 +7,9 @@ import "./math/SafeMath.sol";
 /**
  * @title FeeBurner
  * @author Piotr Zelazko <pik694@GitHub>
- * @dev TODO:
+ *
+ * @dev FeeBurner contract is a part of OmiseGO project and
+ *      provides trustless OMG's buyback and burn mechanism.
  */
 contract FeeBurner { 
     
