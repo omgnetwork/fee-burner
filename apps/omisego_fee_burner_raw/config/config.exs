@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :fee_burner, key: :value
+#     config :omisego_fee_burner_raw, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:fee_burner, :key)
+#     Application.get_env(:omisego_fee_burner_raw, :key)
 #
 # You can also configure a 3rd-party app:
 #

@@ -20,5 +20,5 @@ erl_crash.dump
 *.ez
 
 # Ignore package tarball (built via "mix hex.build").
-fee_burner-*.tar
+omisego_fee_burner_raw-*.tar
 

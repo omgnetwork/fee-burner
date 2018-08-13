@@ -1,6 +1,6 @@
-defmodule FeeBurner do
+defmodule OmisegoFeeBurnerRaw do
   @moduledoc """
-  Documentation for FeeBurner.
+  Documentation for OmisegoFeeBurnerRaw.
   """
 
   @doc """
@@ -8,7 +8,7 @@ defmodule FeeBurner do
 
   ## Examples
 
-      iex> FeeBurner.hello
+      iex> OmisegoFeeBurnerRaw.hello
       :world
 
   """
