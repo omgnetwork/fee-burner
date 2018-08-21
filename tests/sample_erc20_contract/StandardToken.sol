@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "./BasicToken.sol";
-import "../../contracts/ERC20_token/ERC20.sol";
+import "../../contracts/ERC20.sol";
 
 
 /**

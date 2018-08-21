@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 
-import "./ERC20_token/ERC20.sol";
-import "./OMG_ERC20/OMG_ERC20.sol";
-import "./math/SafeMath.sol";
+import "./ERC20.sol";
+import "./OMG_ERC20.sol";
+import "./SafeMath.sol";
 
 /**
  * @title FeeBurner
