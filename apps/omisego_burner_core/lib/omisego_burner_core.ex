@@ -1,6 +1,6 @@
-defmodule OmisegoFeeBurnerRaw do
+defmodule OmiseGO.BurnerCore do
   @moduledoc """
-  Documentation for OmisegoFeeBurnerRaw.
+  Documentation for OmiseGO.BurnerCore.
   """
 
   @doc """
@@ -8,7 +8,7 @@ defmodule OmisegoFeeBurnerRaw do
 
   ## Examples
 
-      iex> OmisegoFeeBurnerRaw.hello
+      iex> OmiseGO.BurnerCore.hello()
       :world
 
   """

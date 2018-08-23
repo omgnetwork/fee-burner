@@ -1,4 +1,4 @@
-defmodule OmisegoFeeBurner.MixProject do
+defmodule OmiseGO.FeeBurner.MixProject do
   use Mix.Project
 
   def project do
@@ -19,7 +19,6 @@ defmodule OmisegoFeeBurner.MixProject do
   # Run "mix help deps" for examples and options.
   defp deps do
     [
-      {:omisego_omisego, git: "git@github.com:omisego/omisego.git", branch: "develop"}
     ]
   end
 end
