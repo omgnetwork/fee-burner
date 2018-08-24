@@ -1,5 +1,3 @@
-
-IO.puts "dupa6969"
 use Mix.Config
 
 # For development, we disable any cache and enable

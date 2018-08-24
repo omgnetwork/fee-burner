@@ -28,7 +28,23 @@ defmodule OmiseGO.BurnerCore.MixProject do
   defp deps do
     [
       {:libsecp256k1, "~> 0.1.9", compile: "make && mix deps.get && mix compile", app: false, override: true},
+      {
+        :plasma_contracts,
+        git: "https://github.com/pik694/plasma-contracts",
+        branch: "feature/fee-burner",
+        sparse: "contracts/",
+        compile: contracts_compile(),
+        app: false,
+        override: true,
+        only: [:dev, :test]
+      },
+
       {:elixir_omg, git: "git@github.com:pik694/elixir-omg.git", branch: "tmp"}
     ]
+  end
+
+  defp contracts_compile do
+    mixfile_path = File.cwd!()
+    "cd #{mixfile_path}/../../ && py-solc-simple -i deps/plasma_contracts/contracts/ -o contracts/build/"
   end
 end

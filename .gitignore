@@ -36,3 +36,4 @@ callgrind.out.*
 
 
 
+/contracts/build/
