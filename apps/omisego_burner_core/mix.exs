@@ -39,7 +39,7 @@ defmodule OmiseGO.BurnerCore.MixProject do
         only: [:dev, :test]
       },
 
-      {:elixir_omg, git: "git@github.com:pik694/elixir-omg.git", branch: "tmp"}
+      {:elixir_omg, git: "git@github.com:pik694/elixir-omg.git", branch: "feature/fee-burner"}
     ]
   end
 
