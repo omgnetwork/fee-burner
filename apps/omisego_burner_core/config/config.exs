@@ -28,3 +28,12 @@ use Mix.Config
 # here (which is why it is important to import them last).
 #
 #     import_config "#{Mix.env()}.exs"
+
+
+config :ethereumex,
+       scheme: "http",
+       host: "localhost",
+       port: 8545,
+       url: "http://localhost:8545",
+       request_timeout: :infinity,
+       http_options: [recv_timeout: :infinity]

@@ -46,3 +46,4 @@ config :omisego_watcher, OmiseGOWatcher.Repo,
        database: "omisego_dev",
        hostname: "localhost",
        pool_size: 10
+
