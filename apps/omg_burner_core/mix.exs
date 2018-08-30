@@ -44,7 +44,7 @@ defmodule OMG.BurnerCore.MixProject do
       {
         :exw3,
         git: "git@github.com:omisego/exw3.git",
-        branch: "error_messages"
+        branch: "feature/deployment"
       },
       {
         :fee_burner_contracts,

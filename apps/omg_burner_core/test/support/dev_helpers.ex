@@ -41,7 +41,6 @@ defmodule OMG.BurnerCore.DevHelpers do
     |> Enum.at(1)
   end
 
-
   def formatted_alice do
     alice
     |> ExW3.format_address
@@ -52,28 +51,19 @@ defmodule OMG.BurnerCore.DevHelpers do
     |> Enum.at(2)
   end
 
+  def owner() do
+    ExW3.accounts
+    |> Enum.at(0)
+  end
+
   def prepare_env!(root_path \\ "./") do
     {:ok, _} = Application.ensure_all_started(:ethereumex)
     {:ok, authority} = create_and_fund_authority_addr()
     {:ok, omg_address} = create_and_mint_omg(root_path, owner)
     {:ok, burner_address} = create_burner(root_path, authority, omg_address)
-    {:ok, contract_addr} = create_root_chain(root_path, authority, burner_address)
+    {:ok, contract_addr, tx_hash} = create_root_chain(root_path, authority, burner_address)
 
-    {
-      :ok,
-      %{
-        authority: authority,
-        OMG: omg_address,
-        Burner: burner_address,
-        RootChain: contract_addr
-      }
-    }
-  end
-
-
-  def owner() do
-    ExW3.accounts
-    |> Enum.at(0)
+    {:ok, authority, omg_address, burner_address, contract_addr, tx_hash}
   end
 
   def create_and_fund_authority_addr do
@@ -83,21 +73,13 @@ defmodule OMG.BurnerCore.DevHelpers do
     {:ok, authority}
   end
 
-  defp unlock_fund(account_enc) do
-    {:ok, true} = Ethereumex.HttpClient.personal_unlock_account(account_enc, "", 0)
-    {:ok, [eth_source_address | _]} = Ethereumex.HttpClient.eth_accounts()
-    txmap = %{from: eth_source_address, to: account_enc, value: encode_eth_rpc_unsigned_int(@ten_eth)}
-    {:ok, tx_fund} = Ethereumex.HttpClient.eth_send_transaction(txmap)
-    WaitFor.eth_receipt(tx_fund, @about_4_blocks_time)
-  end
-
   def create_and_mint_omg(path_project_root, addr) do
     options = %{from: addr, gas: @lots_of_gas}
 
     {abi, bytecode} = get_abi_and_bytecode!(path_project_root, "OmiseGO")
     ExW3.Contract.start_link(OMG, [abi: abi, bin: bytecode])
 
-    {:ok, address} = ExW3.Contract.deploy(OMG, options: options)
+    {:ok, address, _} = ExW3.Contract.deploy(OMG, options: options)
 
     ExW3.Contract.at(OMG, address)
 
@@ -107,7 +89,7 @@ defmodule OMG.BurnerCore.DevHelpers do
     {:ok, address}
   end
 
-  defp create_burner(path_project_root, addr, omg_address) do
+  def create_burner(path_project_root, addr, omg_address) do
     options = %{from: addr, gas: @lots_of_gas}
     formatted_omg_addr = ExW3.format_address(omg_address)
 
@@ -115,7 +97,7 @@ defmodule OMG.BurnerCore.DevHelpers do
     {abi, bytecode} = get_abi_and_bytecode!(path_project_root, "FeeBurner")
     ExW3.Contract.start_link(Burner, [abi: abi, bin: bytecode])
 
-    {:ok, address} = ExW3.Contract.deploy(Burner, args: [formatted_omg_addr], options: options)
+    {:ok, address, _} = ExW3.Contract.deploy(Burner, args: [formatted_omg_addr], options: options)
     ExW3.Contract.at(Burner, address)
 
     {:ok, _} = ExW3.Contract.send(Burner, :addSupportFor, [@zero_address, 1, 1], options)
@@ -124,16 +106,16 @@ defmodule OMG.BurnerCore.DevHelpers do
   end
 
 
-  defp create_root_chain(path_project_root, addr, burner_address) do
+  def create_root_chain(path_project_root, addr, burner_address) do
     options = %{from: addr, gas: @lots_of_gas}
     formatted_burner_addr = ExW3.format_address(burner_address)
 
     {abi, bytecode} = get_abi_and_bytecode!(path_project_root, "RootChain")
     ExW3.Contract.start_link(RootChain, [abi: abi, bin: bytecode])
-    {:ok, address} = ExW3.Contract.deploy(RootChain, args: [formatted_burner_addr], options: options)
+    {:ok, address, tx_hash} = ExW3.Contract.deploy(RootChain, args: [formatted_burner_addr], options: options)
     ExW3.Contract.at(RootChain, address)
 
-    {:ok, address}
+    {:ok, address, tx_hash}
 
   end
 
@@ -169,6 +151,24 @@ defmodule OMG.BurnerCore.DevHelpers do
           "Can't read #{path} because #{inspect(reason)}, try running mix deps.compile plasma_contracts"
         )
     end
+  end
+
+  defp unlock_fund(account_enc) do
+    {:ok, true} = Ethereumex.HttpClient.personal_unlock_account(account_enc, "", 0)
+    {:ok, [eth_source_address | _]} = Ethereumex.HttpClient.eth_accounts()
+    txmap = %{from: eth_source_address, to: account_enc, value: encode_eth_rpc_unsigned_int(@ten_eth)}
+    {:ok, tx_fund} = Ethereumex.HttpClient.eth_send_transaction(txmap)
+    WaitFor.eth_receipt(tx_fund, @about_4_blocks_time)
+  end
+
+  defp create_conf_file!(%{contract_addr: contract_addr, txhash_contract: txhash, authority_addr: authority_addr}) do
+    """
+    use Mix.Config
+    config :omg_eth,
+      contract_addr: #{inspect(contract_addr)},
+      txhash_contract: #{inspect(txhash)},
+      authority_addr: #{inspect(authority_addr)}
+    """
   end
 
 end
