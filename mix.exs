@@ -1,4 +1,4 @@
-defmodule OmiseGO.FeeBurner.MixProject do
+defmodule OMG.FeeBurner.MixProject do
   use Mix.Project
 
   def project do

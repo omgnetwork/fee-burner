@@ -13,7 +13,7 @@
 # limitations under the License.
 
 #TODO: move it somewhere
-defmodule OmiseGO.BurnerCore.DevHelpers do
+defmodule OMG.BurnerCore.DevHelpers do
   @moduledoc """
   Helpers used when setting up development environment and test fixtures, related to contracts and ethereum.
   Run against `geth --dev` and similar.

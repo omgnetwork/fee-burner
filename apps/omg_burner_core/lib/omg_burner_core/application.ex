@@ -1,4 +1,4 @@
-defmodule OmiseGO.BurnerCore.Application do
+defmodule OMG.BurnerCore.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -14,7 +14,7 @@ defmodule OmiseGO.BurnerCore.Application do
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: OmiseGO.BurnerCore.Supervisor]
+    opts = [strategy: :one_for_one, name: OMG.BurnerCore.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end

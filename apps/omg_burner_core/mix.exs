@@ -1,9 +1,9 @@
-defmodule OmiseGO.BurnerCore.MixProject do
+defmodule OMG.BurnerCore.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :omisego_burner_core,
+      app: :omg_burner_core,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
@@ -21,7 +21,7 @@ defmodule OmiseGO.BurnerCore.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {OmiseGO.BurnerCore.Application, []}
+      mod: {OMG.BurnerCore.Application, []}
     ]
   end
 
