@@ -34,7 +34,7 @@ defmodule OMG.BurnerCore.DevHelpers do
   @hundred_omg trunc(:math.pow(10, 18) * 100)
 
   @dead_address ExW3.format_address("0xdead")
-  @zero_address ExW3.format_address("0x00")
+
 
   def alice do
     ExW3.accounts()
@@ -63,7 +63,7 @@ defmodule OMG.BurnerCore.DevHelpers do
     {:ok, burner_address} = create_burner(root_path, authority, omg_address)
     {:ok, contract_addr, tx_hash} = create_root_chain(root_path, authority, burner_address)
 
-    {:ok, authority, omg_address, burner_address, contract_addr, tx_hash}
+    %{contract_addr: contract_addr, txhash_contract: tx_hash, authority_addr: authority, omg_address: omg_address, burner_address: burner_address}
   end
 
   def create_and_fund_authority_addr do
@@ -100,7 +100,7 @@ defmodule OMG.BurnerCore.DevHelpers do
     {:ok, address, _} = ExW3.Contract.deploy(Burner, args: [formatted_omg_addr], options: options)
     ExW3.Contract.at(Burner, address)
 
-    {:ok, _} = ExW3.Contract.send(Burner, :addSupportFor, [@zero_address, 1, 1], options)
+    {:ok, _} = ExW3.Contract.send(Burner, :addSupportFor, [Crypto.zero_address(), 1, 1], options)
 
     {:ok, address}
   end
@@ -117,6 +117,16 @@ defmodule OMG.BurnerCore.DevHelpers do
 
     {:ok, address, tx_hash}
 
+  end
+
+  def create_conf_file(%{contract_addr: contract_addr, txhash_contract: txhash, authority_addr: authority_addr}) do
+    """
+    use Mix.Config
+    config :omg_eth,
+      contract_addr: #{inspect(contract_addr)},
+      txhash_contract: #{inspect(txhash)},
+      authority_addr: #{inspect(authority_addr)}
+    """
   end
 
   defp get_abi_and_bytecode!(path_project_root, contract_name) do
@@ -161,14 +171,6 @@ defmodule OMG.BurnerCore.DevHelpers do
     WaitFor.eth_receipt(tx_fund, @about_4_blocks_time)
   end
 
-  defp create_conf_file!(%{contract_addr: contract_addr, txhash_contract: txhash, authority_addr: authority_addr}) do
-    """
-    use Mix.Config
-    config :omg_eth,
-      contract_addr: #{inspect(contract_addr)},
-      txhash_contract: #{inspect(txhash)},
-      authority_addr: #{inspect(authority_addr)}
-    """
-  end
+
 
 end

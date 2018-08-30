@@ -69,7 +69,7 @@ defmodule OMG.BurnerCore.MixProject do
       },
       {:omisego,
         path: "../../contracts",
-        compile: copy_omisego_contract,
+        compile: copy_omisego_contract(),
         app: false,
         only: [:dev, :test]
       }
