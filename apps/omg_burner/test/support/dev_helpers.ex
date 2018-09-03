@@ -1,23 +1,21 @@
 defmodule OMG.Burner.DevHelpers do
 
   alias ExW3.Contract
-#  alias OmiseGO.API.Crypto
-#  alias OmiseGO.Eth.WaitFor, as: WaitFor
-#  alias OmiseGO.Eth
-#
-#  import OmiseGO.Eth.Encoding
+  alias OmiseGO.Eth.WaitFor
 
+  # safe, reasonable amount, equal to the testnet block gas limit
+  @lots_of_gas 4_712_388
 
-  @lots_of_gas 6_721_975
+  # about 4 Ethereum blocks on "realistic" networks, use to timeout synchronous operations in demos on testnets
+  @about_4_blocks_time 60_000
 
-  @hundred_omg trunc(:math.pow(10, 18) * 100)
+  @one_hundred_eth trunc(:math.pow(10, 18) * 100)
+  @one_thousand_omg trunc(:math.pow(10, 18) * 1_000)
 
   @dead_address ExW3.format_address("0xdead")
   @zero_address ExW3.format_address("0x00")
 
-  def authority, do: ExW3.accounts|> Enum.at(0)
-  def alice, do: ExW3.accounts |> Enum.at(1)
-  def bob, do: ExW3.accounts |> Enum.at(2)
+  def authority, do: ExW3.accounts |> Enum.at(0)
 
   def prepare_env!(root_path \\ "./") do
     {:ok, _} = Application.ensure_all_started(:ethereumex)
@@ -34,7 +32,26 @@ defmodule OMG.Burner.DevHelpers do
     }
   end
 
-  def create_conf_file(%{RootChain: contract_addr, txhash_root_chain: txhash, authority_addr: authority_addr, OMG: omg_addr, Burner: burner_addr}) do
+  def create_unlock_and_fund_entity(password \\ "") do
+    {:ok, address} = Ethereumex.HttpClient.personal_new_account(password)
+    {:ok, true} = Ethereumex.HttpClient.personal_unlock_account(address, password, 0)
+
+    txmap = %{from: authority(), to: address, value: ExW3.encode_option(@one_hundred_eth)}
+    {:ok, tx_fund} = Ethereumex.HttpClient.eth_send_transaction(txmap)
+    WaitFor.eth_receipt(tx_fund, @about_4_blocks_time)
+
+    address
+  end
+
+  def create_conf_file(
+        %{
+          RootChain: contract_addr,
+          txhash_root_chain: txhash,
+          authority_addr: authority_addr,
+          OMG: omg_addr,
+          Burner: burner_addr
+        }
+      ) do
     """
     use Mix.Config
     config :omg_eth,
@@ -53,14 +70,20 @@ defmodule OMG.Burner.DevHelpers do
     {abi, bytecode} = get_abi_and_bytecode!(path_project_root, "OmiseGO")
     Contract.start_link(OMG, [abi: abi, bin: bytecode])
 
-    {:ok, address, _} = Contract.deploy(OMG, options: options)
+    {:ok, _, tx_hash} = Contract.deploy(OMG, options: options)
+
+    {:ok, receipt} = WaitFor.eth_receipt(tx_hash, @about_4_blocks_time)
+    address = receipt["contractAddress"]
 
     Contract.at(OMG, address)
 
-    formatted_addr = alice() |> ExW3.format_address
-    {:ok, _} = Contract.send(OMG, :mint, [formatted_addr ,@hundred_omg], options)
-    {:ok, _} = Contract.send(OMG, :finishMinting, [], options)
-    {:ok, _} = Contract.send(OMG, :transferOwnership, [@dead_address], options)
+    formatted_addr = authority()
+                     |> ExW3.format_address
+
+    Contract.send(OMG, :mint, [formatted_addr, @one_thousand_omg], options)
+    Contract.send(OMG, :finishMinting, [], options)
+    Contract.send(OMG, :transferOwnership, [@dead_address], options)
+
     {:ok, address}
 
   end
@@ -73,7 +96,10 @@ defmodule OMG.Burner.DevHelpers do
     {abi, bytecode} = get_abi_and_bytecode!(path_project_root, "FeeBurner")
     Contract.start_link(Burner, [abi: abi, bin: bytecode])
 
-    {:ok, address, _} = Contract.deploy(Burner, args: [formatted_omg_addr], options: options)
+    {:ok, _, tx_hash} = Contract.deploy(Burner, args: [formatted_omg_addr], options: options)
+    {:ok, receipt} = WaitFor.eth_receipt(tx_hash, @about_4_blocks_time)
+    address = receipt["contractAddress"]
+
     Contract.at(Burner, address)
 
     {:ok, _} = Contract.send(Burner, :addSupportFor, [@zero_address, 1, 1], options)
@@ -87,23 +113,17 @@ defmodule OMG.Burner.DevHelpers do
 
     {abi, bytecode} = get_abi_and_bytecode!(path_project_root, "RootChain")
     Contract.start_link(RootChain, [abi: abi, bin: bytecode])
-    {:ok, address, tx_hash} = Contract.deploy(RootChain, args: [formatted_burner_addr, 1], options: options)
+    {:ok, _, tx_hash} = Contract.deploy(RootChain, args: [formatted_burner_addr, 1], options: options)
+    {:ok, receipt} = WaitFor.eth_receipt(tx_hash, @about_4_blocks_time)
+    address = receipt["contractAddress"]
+
     Contract.at(RootChain, address)
 
     {:ok, address, tx_hash}
 
   end
 
-#  defp unlock_fund(account_enc) do
-#    {:ok, true} = Ethereumex.HttpClient.personal_unlock_account(account_enc, "", 0)
-#
-#    {:ok, [eth_source_address | _]} = Ethereumex.HttpClient.eth_accounts()
-#    txmap = %{from: eth_source_address, to: account_enc, value: encode_eth_rpc_unsigned_int(@ten_eth)}
-#    {:ok, tx_fund} = Ethereumex.HttpClient.eth_send_transaction(txmap)
-#    WaitFor.eth_receipt(tx_fund, @about_4_blocks_time)
-#  end
-
-  defp get_abi_and_bytecode!(path_project_root, contract_name) do
+  def get_abi_and_bytecode!(path_project_root, contract_name) do
     %{
       "abi" => abi_list,
       "evm" => %{
