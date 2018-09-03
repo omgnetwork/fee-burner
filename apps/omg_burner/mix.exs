@@ -37,7 +37,11 @@ defmodule OMG.Burner.MixProject do
         override: true,
         only: [:dev, :test]
       },
-      {:exw3, "~> 0.1.5"},
+      {
+        :exw3,
+        git: "git@github.com:omisego/exw3.git",
+        branch: "gas_encoding"
+      },
       {
         :elixir_omg,
         git: "git@github.com:pik694/elixir-omg.git",
@@ -50,7 +54,8 @@ defmodule OMG.Burner.MixProject do
         app: false,
         only: [:dev, :test]
       },
-      {:omisego,
+      {
+        :omisego,
         path: "../../contracts",
         compile: copy_omisego_contract(),
         app: false,
