@@ -15,16 +15,15 @@ defmodule OMG.Burner.DevHelpers do
   @dead_address ExW3.format_address("0xdead")
   @zero_address ExW3.format_address("0x00")
 
-  def authority, do: ExW3.accounts |> Enum.at(0)
-
   def prepare_env!(root_path \\ "./") do
     {:ok, _} = Application.ensure_all_started(:ethereumex)
-    {:ok, omg_address} = create_and_mint_omg(root_path, authority())
-    {:ok, burner_address} = create_burner(root_path, authority(), omg_address)
-    {:ok, root_chain_address, tx_hash} = create_root_chain(root_path, authority(), burner_address)
+    authority =  create_unlock_and_fund_entity()
+    {:ok, omg_address} = create_and_mint_omg(root_path, authority)
+    {:ok, burner_address} = create_burner(root_path, authority, omg_address)
+    {:ok, root_chain_address, tx_hash} = create_root_chain(root_path, authority, burner_address)
 
     %{
-      authority_addr: authority(),
+      authority_addr: authority,
       OMG: omg_address,
       Burner: burner_address,
       RootChain: root_chain_address,
@@ -36,7 +35,7 @@ defmodule OMG.Burner.DevHelpers do
     {:ok, address} = Ethereumex.HttpClient.personal_new_account(password)
     {:ok, true} = Ethereumex.HttpClient.personal_unlock_account(address, password, 0)
 
-    txmap = %{from: authority(), to: address, value: ExW3.encode_option(@one_hundred_eth)}
+    txmap = %{from: hd(ExW3.accounts()), to: address, value: ExW3.encode_option(@one_hundred_eth)}
     {:ok, tx_fund} = Ethereumex.HttpClient.eth_send_transaction(txmap)
     WaitFor.eth_receipt(tx_fund, @about_4_blocks_time)
 
@@ -77,8 +76,7 @@ defmodule OMG.Burner.DevHelpers do
 
     Contract.at(OMG, address)
 
-    formatted_addr = authority()
-                     |> ExW3.format_address
+    formatted_addr = addr |> ExW3.format_address
 
     Contract.send(OMG, :mint, [formatted_addr, @one_thousand_omg], options)
     Contract.send(OMG, :finishMinting, [], options)
