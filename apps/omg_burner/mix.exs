@@ -74,7 +74,9 @@ defmodule OMG.Burner.MixProject do
         git: "https://github.com/omisego/abi.git",
         branch: "encode_dynamic_types",
         override: true
-      }
+      },
+      {:httpoison, "~> 1.1"},
+      {:poison, "~> 3.1"}
     ]
   end
 
@@ -84,12 +86,12 @@ defmodule OMG.Burner.MixProject do
 
   defp compile_plasma_contracts do
     mixfile_path = File.cwd!()
-    "cd #{mixfile_path}/../../ && py-solc-simple -i deps/plasma_contracts/contracts/ -o contracts/build/"
+    "cd #{mixfile_path}/../../ && source env/bin/activate && py-solc-simple -i deps/plasma_contracts/contracts/ -o contracts/build/"
   end
 
   defp compile_fee_burner_contracts do
     mixfile_path = File.cwd!()
-    "cd #{mixfile_path}/../../ && py-solc-simple -i contracts/ -o contracts/build/"
+    "cd #{mixfile_path}/../../ && source env/bin/activate && py-solc-simple -i contracts/ -o contracts/build/"
   end
 
   defp copy_omisego_contract do
