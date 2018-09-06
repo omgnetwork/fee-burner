@@ -1,5 +1,6 @@
 defmodule OMG.Burner.ThresholdAgent do
   use GenServer
+  alias OMG.Burner.HttpRequester, as: Requester
 
   def get(setting) do
 
@@ -21,7 +22,7 @@ defmodule OMG.Burner.ThresholdAgent do
       casual: casual_period,
       short: short_period,
       max_gas_price: max_gas_price,
-      gas_expensive: true
+      active_period: casual_period
     }
 
     GenServer.start_link(__MODULE__, state)
@@ -36,9 +37,10 @@ defmodule OMG.Burner.ThresholdAgent do
   # handlers
 
   def handle_info(:loop, state) do
-    state = do_work(state)
-    schedule_work(state)
-    {:noreply, state}
+    new_state = state
+                |> do_work()
+                |> schedule_work()
+    {:noreply, new_state}
   end
 
   def handle_call({:get, setting}, _from, state) do
@@ -48,9 +50,8 @@ defmodule OMG.Burner.ThresholdAgent do
   def handle_call({:set, setting, value}, _from, state) do
     with {:ok, old} <- Map.fetch(state, setting)
       do
-      new_state = state
-                  |> Map.put(setting, value)
-      {:reply, {:ok, old, value}, new_state}
+      upated_state = state
+                     |> Map.put(setting, value)
     else
       _ -> {:reply, {:error, :no_such_setting}, state}
     end
@@ -58,12 +59,35 @@ defmodule OMG.Burner.ThresholdAgent do
 
   # private
 
-  defp schedule_work(state)do
-    Process.send_after(self(), :loop, get_period(state))
+  defp schedule_work(state) do
+    Process.send_after(self(), :loop, state.active_period)
     :ok
   end
 
-  defp get_period(%{gas_expensive: false, casual: casual_period} = _state), do: casual_period
-  defp get_period(%{gas_expensive: true, short: short_period} = _state), do: short_period
+  defp do_work(state) do
+    with :ok <- check_gas_price(state) do
+      check_thresholds()
+      state
+    else
+      :error -> Map.put(state, :active_period, state.short_period)
+    end
+  end
+
+  defp check_gas_price(%{max_gas_price: max_gas_price} = state) do
+    with {:ok, current_price} <- Requester.get_gas_price(),
+         true <- current_price <= max_gas_price
+      do
+      :ok
+    else
+      :error -> Logger.error("A problem with gas station occured. Check connection or API changes")
+                :error
+      false -> Logger.info("Gas price exceeds maximum value")
+               :error
+    end
+  end
+
+  defp check_thresholds() do
+    # TODO
+  end
 
 end
