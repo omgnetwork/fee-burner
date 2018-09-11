@@ -100,7 +100,7 @@ defmodule OMG.Burner.DevHelpers do
 
     Contract.at(Burner, address)
 
-    {:ok, _} = Contract.send(Burner, :addSupportFor, [@zero_address, 1, 1], options)
+
 
     {:ok, address}
   end
