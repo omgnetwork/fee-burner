@@ -12,9 +12,12 @@ config :ethereumex,
 
 config :omg_burner,
        contract_address: "0x0",
-       max_gas_price: {10, :gwei},
+       max_gas_price:  30, # in gwei
+       casual_period: 60 * :math.pow(10, 3) |>  round,  # in milliseconds
+       short_period: 10 * :math.pow(10, 3) |> round,   # in milliseconds
        thresholds: %{
-         "0x00" => %{ # "0x00" for Ether
+         "0x00" => %{
+           # "0x00" for Ether
            coinmarketcap_id: 1027,
            currency: USD,
            value: 100

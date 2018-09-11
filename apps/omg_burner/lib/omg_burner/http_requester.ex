@@ -13,7 +13,7 @@ defmodule OMG.Burner.HttpRequester do
 
   def get_token_price(id, currency) do
 
-    currency = get_atom_string(currency)
+    currency = get_currency_string(currency)
     request = @market_api_url <> "#{id}/?convert=#{currency}"
 
     with {:ok, %HTTPoison.Response{status_code: 200, body: body}} <- HTTPoison.get(request)
@@ -25,7 +25,7 @@ defmodule OMG.Burner.HttpRequester do
   end
 
   def decode_token_price(json, currency) when is_atom(currency) do
-    currency = get_atom_string(currency)
+    currency = get_currency_string(currency)
     decode_token_price(json, currency)
   end
 
@@ -45,7 +45,7 @@ defmodule OMG.Burner.HttpRequester do
 
   def decode_gas_price(json) do
     price = Poison.decode!(json)
-            |> Map.get("safeLowWait")
+            |> Map.get("safeLow")
 
     case price do
       nil -> :error
@@ -53,7 +53,7 @@ defmodule OMG.Burner.HttpRequester do
     end
   end
 
-  defp get_atom_string(currency) when is_atom(currency) do
+  defp get_currency_string(currency) when is_atom(currency) do
     currency
     |> Atom.to_string()
     |> String.trim_leading("Elixir.")

@@ -1,35 +1,34 @@
 defmodule OMG.Burner.ThresholdAgent do
   use GenServer
   alias OMG.Burner.HttpRequester, as: Requester
+  require Logger
 
   def get(setting) do
-
+    GenServer.call(__MODULE__, {:get, setting})
   end
 
   def set(setting, value) do
+    GenServer.call(__MODULE__, {:set, setting, value})
+  end
 
+  def start_link(args \\ %{}) do
+    GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   # GenServer
+  def init(args) do
 
-  def start_link(options) do
-
-    casual_period = options.casual_period || Application.get_env(:omg_burner, :casual_period)
-    short_period = options.short_period || Application.get_env(:omg_burner, :short_period) || casual_period
-    max_gas_price = options.max_gas_price || Application.get_env(:omg_burmer, :max_gas_price)
+    casual_period = Map.get(args, :casual_period) || Application.get_env(:omg_burner, :casual_period)
+    short_period = Map.get(args, :short_period) || Application.get_env(:omg_burner, :short_period) || casual_period
+    max_gas_price = Map.get(args, :max_gas_price) || Application.get_env(:omg_burner, :max_gas_price)
 
     state = %{
-      casual: casual_period,
-      short: short_period,
+      casual_period: casual_period,
+      short_period: short_period,
       max_gas_price: max_gas_price,
       active_period: casual_period
     }
 
-    GenServer.start_link(__MODULE__, state)
-
-  end
-
-  def init(state) do
     schedule_work(state)
     {:ok, state}
   end
@@ -39,7 +38,7 @@ defmodule OMG.Burner.ThresholdAgent do
   def handle_info(:loop, state) do
     new_state = state
                 |> do_work()
-                |> schedule_work()
+    schedule_work(new_state)
     {:noreply, new_state}
   end
 
@@ -75,9 +74,11 @@ defmodule OMG.Burner.ThresholdAgent do
 
   defp check_gas_price(%{max_gas_price: max_gas_price} = state) do
     with {:ok, current_price} <- Requester.get_gas_price(),
-         true <- current_price <= max_gas_price
-      do
+         true <- current_price <= max_gas_price do
+
+      Logger.info("Current gas price: #{current_price}")
       :ok
+
     else
       :error -> Logger.error("A problem with gas station occured. Check connection or API changes")
                 :error
@@ -87,7 +88,7 @@ defmodule OMG.Burner.ThresholdAgent do
   end
 
   defp check_thresholds() do
-    # TODO
+    Logger.info("Agent is working")
   end
 
 end

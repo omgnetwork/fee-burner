@@ -20,7 +20,7 @@ defmodule OMG.Burner.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {OMG.Burner.Application, []}
+      mod: {OMG.Burner.Application, []},
     ]
   end
 

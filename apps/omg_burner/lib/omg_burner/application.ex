@@ -6,13 +6,10 @@ defmodule OMG.Burner.Application do
   use Application
 
   def start(_type, _args) do
-    # List all child  processes to be supervised
     children = [
-      # Starts a worker by calling: OMG.Burner.Worker.start_link(arg)
-      # {OMG.Burner.Worker, arg},
+      {OMG.Burner.ThresholdAgent}
     ]
-
-    opts = [strategy: :one_for_one, name: OMG.Burner.Supervisor]
+    opts = [strategy: :one_for_one]
     Supervisor.start_link(children, opts)
   end
 end

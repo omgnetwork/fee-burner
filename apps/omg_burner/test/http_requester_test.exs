@@ -10,7 +10,7 @@ defmodule OMG.Burner.HttpRequesterTest do
   @tag fixtures: [:gasstation_response]
   test "decode gas_price from gas station's response", %{gasstation_response: response} do
 
-    assert Requester.decode_gas_price(response) == {:ok, 2.6}
+    assert Requester.decode_gas_price(response) == {:ok, 28.0}
 
   end
 
