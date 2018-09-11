@@ -11,7 +11,7 @@ user@host:fee-burner$ iex -S mix run --no-start
 ```
 
 ```elixir
-# perepare environment
+# prepare environment
 import OMG.Burner.DevHelpers
 alias ExW3.Contract
 alias OmiseGO.Eth
