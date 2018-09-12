@@ -18,39 +18,39 @@ defmodule OMG.Burner.State do
   end
 
   @spec add_fee(token_t(), number()) :: status_t()
-  def add_fee(token, value) do
+  def add_fee(token, value) when is_atom(token) and is_number(value) do
     GenServer.cast(__MODULE__, {:add_fee, token, value})
     :ok
   end
 
   @spec preexit_token(token_t()) :: status_with_value_t()
-  def preexit_token(token) do
+  def preexit_token(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:preexit, token})
   end
 
   @spec confirm_token_exited(token_t()) :: status_t()
-  def confirm_token_exited(token) do
+  def confirm_token_exited(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:confirm_exit, token})
   end
 
   @spec cancel_preexit(token_t()) :: status_t()
-  def cancel_preexit(token) do
+  def cancel_preexit(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:cancel_exit, token})
   end
 
   @spec get_preexited_fees(token_t) :: number()
-  def get_preexited_fees(token) do
+  def get_preexited_fees(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:get_preexited, token})
   end
 
   @spec get_accumulated_fees(token_t()) :: number()
-  def get_accumulated_fees(token) do
+  def get_accumulated_fees(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:get_accumulated, token})
   end
 
   # GenServer
 
-  def init({accumulated, preexited} = state) do
+  def init({_accumulated, _preexited} = state) do
     {:ok, state}
   end
 
