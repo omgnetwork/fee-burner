@@ -14,6 +14,7 @@ user@host:fee-burner$ iex -S mix run --no-start
 # prepare environment
 import OMG.Burner.DevHelpers
 alias ExW3.Contract
+alias OmiseGO.Eth.WaitFor
 alias OmiseGO.Eth
 
 one_hundred_eth_en = trunc(:math.pow(10, 18) * 100) |> ExW3.encode_option
@@ -66,8 +67,11 @@ ExW3.balance(Contract.address(Burner))
 
 
 # make invalid exchanges
-Contract.send(Burner, :exchange, [0, 50, 1, 99, 2], %{from: alice, gas: 2_000_000}) #invalid amounts
-Contract.send(Burner, :exchange, [0, 51, 1, 102, 2], %{from: alice, gas: 2_000_000}) # invalid rate
+{:ok, tx_hash} = Contract.send(Burner, :exchange, [0, 50, 1, 99, 2], %{from: alice, gas: 2_000_000}) #invalid amounts
+WaitFor.eth_receipt(tx_hash) # status: String - '0x0' indicates transaction failure , '0x1' indicates transaction succeeded
+
+{:ok, tx_hash} = Contract.send(Burner, :exchange, [0, 51, 1, 102, 2], %{from: alice, gas: 2_000_000}) # invalid rate
+WaitFor.eth_receipt(tx_hash)
 
 # check balances once again
 Contract.call(OMG, :balanceOf, ["0xdead" |> ExW3.format_address])
