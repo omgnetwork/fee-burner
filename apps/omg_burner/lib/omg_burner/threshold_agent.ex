@@ -1,15 +1,9 @@
 defmodule OMG.Burner.ThresholdAgent do
   use GenServer
+  use AdjustableServer
+
   alias OMG.Burner.HttpRequester, as: Requester
   require Logger
-
-  def get(setting) do
-    GenServer.call(__MODULE__, {:get, setting})
-  end
-
-  def set(setting, value) do
-    GenServer.call(__MODULE__, {:set, setting, value})
-  end
 
   def start_link(args \\ %{}) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
@@ -40,20 +34,6 @@ defmodule OMG.Burner.ThresholdAgent do
                 |> do_work()
     schedule_work(new_state)
     {:noreply, new_state}
-  end
-
-  def handle_call({:get, setting}, _from, state) do
-    {:reply, Map.get(state, setting), state}
-  end
-
-  def handle_call({:set, setting, value}, _from, state) do
-    with {:ok, old} <- Map.fetch(state, setting)
-      do
-      upated_state = state
-                     |> Map.put(setting, value)
-    else
-      _ -> {:reply, {:error, :no_such_setting}, state}
-    end
   end
 
   # private
