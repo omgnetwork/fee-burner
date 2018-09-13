@@ -3,7 +3,7 @@ defmodule OMG.Burner.Eth do
   require Logger
 
   use AdjustableServer
-  alias OmiseGO.Eth
+  alias OMG.Eth
 
   @success "0x01"
   @failure "0x00"

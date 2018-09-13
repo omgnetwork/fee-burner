@@ -1,7 +1,7 @@
 defmodule OMG.Burner.DevHelpers do
 
   alias ExW3.Contract
-  alias OmiseGO.Eth.WaitFor
+  alias OMG.Eth.WaitFor
 
   # safe, reasonable amount, equal to the testnet block gas limit
   @lots_of_gas 4_712_388

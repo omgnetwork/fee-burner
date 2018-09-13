@@ -14,8 +14,8 @@ user@host:fee-burner$ iex -S mix run --no-start
 # prepare environment
 import OMG.Burner.DevHelpers
 alias ExW3.Contract
-alias OmiseGO.Eth.WaitFor
-alias OmiseGO.Eth
+alias OMG.Eth.WaitFor
+alias OMG.Eth
 
 one_hundred_eth_en = trunc(:math.pow(10, 18) * 100) |> ExW3.encode_option
 env = prepare_env!
@@ -35,7 +35,7 @@ Contract.send(OMG, :transfer, [alice |> ExW3.format_address, 1_000], %{gas: 2_00
 Contract.call(Burner, :getExchangeRate, [0])
 
 # make deposit
-Contract.send(RootChain, :deposit, [], %{gas: 2_000_000, from: alice, value: 1_000_000 |> ExW3.encode_option})
+Eth.RootChain.deposit(1_000_000, alice,  env[:RootChain])
 Contract.call(RootChain, :currentDepositBlock)
 
 ```
@@ -44,7 +44,7 @@ Now assume that some transactions have taken place on the child chain and the op
 
 ```elixir
 # fee exit - note that root chain contract is parametrized and exits has to wait at most 2 seconds
-Eth.start_fee_exit(0, 100_000, 20_000_000_000, env.authority_addr, Contract.address(RootChain))
+Eth.RootChain.start_fee_exit(0, 100_000, 20_000_000_000, env.authority_addr, env[:RootChain])
 Contract.call(RootChain, :getNextExit, [0])
 
 ExW3.balance(Contract.address(Burner))
