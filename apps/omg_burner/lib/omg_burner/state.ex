@@ -48,6 +48,14 @@ defmodule OMG.Burner.State do
     GenServer.call(__MODULE__, {:get_accumulated, token})
   end
 
+  def get_accumualted_fees() do
+    GenServer.call(__MODULE__, :get_accumulated)
+  end
+
+  def get_preexited_fees(token) when is_atom(token) do
+    GenServer.call(__MODULE__,:get_preexited)
+  end
+
   # GenServer
 
   def init({_accumulated, _preexited} = state) do
@@ -72,8 +80,16 @@ defmodule OMG.Burner.State do
     {:reply, Map.get(accumulated, token, 0), state}
   end
 
+  def handle_call(:get_accumulated, _from, {accumulated, _} = state) do
+    {:reply, accumulated, state}
+  end
+
   def handle_call({:get_preexited, token}, _from, {_, preexited} = state) do
     {:reply, Map.get(preexited, token, 0), state}
+  end
+
+  def handle_call(:get_preexited, _from, {_, preexited} = state) do
+    {:reply, preexited, state}
   end
 
   def handle_call({:confirm_exit, token}, _from, {accumulated, preexited}) do

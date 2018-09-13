@@ -2,6 +2,7 @@ defmodule OMG.Burner do
   require Logger
 
   alias OMG.Burner.State
+  alias OMG.Burner.Eth
 
   # API
   def add_fee_to_be_collected(token, value) do
@@ -12,8 +13,7 @@ defmodule OMG.Burner do
     {:ok, value} = State.preexit_token(token)
 
     Logger.info("Starting #{token} exit, have accumulated #{value} of tokens")
-
-    # TODO: send request to Contract module
+    Eth.start_fee_exit(token, value)
 
   end
 
