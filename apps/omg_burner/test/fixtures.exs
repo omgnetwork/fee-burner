@@ -1,6 +1,31 @@
 defmodule OMG.Burner.Fixtures do
 
   use ExUnitFixtures.FixtureModule
+  alias OMG.Burner.DevHelpers
+
+  deffixture geth do
+    {:ok, exit_fn} = OMG.Eth.DevGeth.start()
+    on_exit(exit_fn)
+    :ok
+  end
+
+  deffixture contracts(geth) do
+    :ok = geth
+    OMG.Burner.DevHelpers.prepare_env!("../../")
+  end
+
+  deffixture root_chain(contracts) do
+    Map.fetch!(contracts, :RootChain)
+  end
+
+  deffixture authority(contracts) do
+    Map.fetch!(contracts, :authority_addr)
+  end
+
+  deffixture alice(geth) do
+    :ok = geth
+    OMG.Burner.DevHelpers.create_unlock_and_fund_entity()
+  end
 
   deffixture gasstation_response do
     ~s({

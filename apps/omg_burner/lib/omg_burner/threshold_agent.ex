@@ -85,7 +85,8 @@ defmodule OMG.Burner.ThresholdAgent do
     threshold_info = Application.get_env(:omg_burner, :threshold)
                      |> Map.get(token)
     with :ready <- do_check_threshold(token, threshold_info) do
-      OMG.Burner.start_fee_exit(token)
+      current_gas_price = OMG.Burner.HttpRequester.get_gas_price()
+      OMG.Burner.start_fee_exit(token, current_gas_price)
     else
       :unsupported_token -> Logger.error("Missing configuration for #{token}")
     end

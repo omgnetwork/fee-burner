@@ -9,12 +9,11 @@ defmodule OMG.Burner do
     State.add_fee(token, value)
   end
 
-  def start_fee_exit(token) do
+  def start_fee_exit(token, gas_price) do
     {:ok, value} = State.preexit_token(token)
-
+    result = Eth.start_fee_exit(token, value, gas_price)
     Logger.info("Starting #{token} exit, have accumulated #{value} of tokens")
-    Eth.start_fee_exit(token, value)
-
+    result
   end
 
   def confirm_fee_exit_started(token) do

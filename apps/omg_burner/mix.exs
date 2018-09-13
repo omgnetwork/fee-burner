@@ -45,7 +45,8 @@ defmodule OMG.Burner.MixProject do
       {
         :elixir_omg,
         git: "git@github.com:pik694/elixir-omg.git",
-        branch: "feature/fee-burner"
+        branch: "feature/fee-burner",
+        env: :dev
       },
       {
         :fee_burner_contracts,

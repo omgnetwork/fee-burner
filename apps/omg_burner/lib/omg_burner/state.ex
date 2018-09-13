@@ -115,7 +115,7 @@ defmodule OMG.Burner.State do
     tmp = accumulated
           |> Map.update(token, value, &(&1 + value))
 
-    # todo: move
+    # TODO: move
     if Map.get(tmp, token) > 0 do
       tmp
     else

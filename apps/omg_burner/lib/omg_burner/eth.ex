@@ -1,5 +1,4 @@
 defmodule OMG.Burner.Eth do
-
   require Logger
 
   use AdjustableServer
@@ -8,7 +7,7 @@ defmodule OMG.Burner.Eth do
   @success "0x01"
   @failure "0x00"
 
-  def start_link(args \\ nil) do
+  def start_link(args \\ %{}) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
@@ -28,10 +27,10 @@ defmodule OMG.Burner.Eth do
   end
 
   def start_fee_exit(token, amount, gas_price) when is_atom(token)do
-    GenServer.cast(__MODULE__, {:start, token, amount, gas_price})
+    {:ok, tx_hash} = GenServer.call(__MODULE__, {:start, token, amount, gas_price})
   end
 
-  def handle_cast({:start, token, amount, gas_price}, state) do
+  def handle_call({:start, token, amount, gas_price}, _from, state) do
 
     refresh_period = Map.get(state, :refresh_period)
     authority = Map.get(state, :authority)
@@ -40,11 +39,11 @@ defmodule OMG.Burner.Eth do
                     |> Map.fetch!(token)
                     |> Map.fetch!(:address)
 
-    case Eth.start_fee_exit(token_address, amount, gas_price, authority) do
-      {:ok, tx_hash} -> Process.send_after(self(), {:wait, tx_hash, token, 0}, refresh_period)
-      _ -> Logger.error("Could not send transaction. Authority: #{authority}, token: #{token}, amount: #{amount}")
-    end
-    {:noreply, state}
+    IO.inspect(token_address)
+    {:ok, tx_hash} = Eth.RootChain.start_fee_exit(token_address, amount, gas_price, authority)
+    Process.send_after(self(), {:wait, tx_hash, token, 0}, refresh_period)
+
+    {:reply, {:ok, tx_hash}, state}
   end
 
   def handle_info({:wait, tx_hash, token, count}, state) do
