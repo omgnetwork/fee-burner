@@ -9,15 +9,15 @@ config :ethereumex,
        http_options: [
          recv_timeout: :infinity
        ]
-
+# TODO : add missing configs
 config :omg_burner,
-       contract_address: "0x0",
        max_gas_price:  30, # in gwei
        casual_period: 60 * :math.pow(10, 3) |>  round,  # in milliseconds
        short_period: 10 * :math.pow(10, 3) |> round,   # in milliseconds
        thresholds: %{
-         "0x00" => %{
-           # "0x00" for Ether
+         ETH => %{
+           address: "0x00",
+           decimals: 18,
            coinmarketcap_id: 1027,
            currency: USD,
            value: 100
