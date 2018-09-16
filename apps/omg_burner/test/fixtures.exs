@@ -1,7 +1,9 @@
 defmodule OMG.Burner.Fixtures do
 
   use ExUnitFixtures.FixtureModule
-  alias OMG.Burner.DevHelpers
+  import OMG.Burner.DevHelpers
+
+  @gas_price 20_000_000_000
 
   deffixture geth do
     {:ok, exit_fn} = OMG.Eth.DevGeth.start()
@@ -9,22 +11,38 @@ defmodule OMG.Burner.Fixtures do
     :ok
   end
 
-  deffixture contracts(geth) do
-    :ok = geth
+  deffixture ethereumex (geth) do
+    {:ok, _} = Application.ensure_all_started(:ethereumex)
+    :ok
+  end
+
+  deffixture authority(ethereumex) do
+    :ok = ethereumex
+    authority = create_unlock_and_fund_entity()
+  end
+
+  deffixture root_chain(authority) do
+    burner_addr = "0x00"
+    {:ok, contract, tx_hash} = create_root_chain("../../", authority, burner_addr)
+    contract
+  end
+
+  deffixture environment(ethereumex) do
+    :ok = ethereumex
     OMG.Burner.DevHelpers.prepare_env!("../../")
   end
 
-  deffixture root_chain(contracts) do
-    Map.fetch!(contracts, :RootChain)
-  end
-
-  deffixture authority(contracts) do
-    Map.fetch!(contracts, :authority_addr)
-  end
-
-  deffixture alice(geth) do
-    :ok = geth
+  deffixture alice(ethereumex) do
+    :ok = ethereumex
     OMG.Burner.DevHelpers.create_unlock_and_fund_entity()
+  end
+
+  deffixture tx_opts(authority, root_chain) do
+    %{
+      gas_price: @gas_price,
+      from: authority,
+      contract: root_chain
+    }
   end
 
   deffixture gasstation_response do

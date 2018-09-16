@@ -4,26 +4,59 @@ defmodule OMG.Burner do
   alias OMG.Burner.State
   alias OMG.Burner.Eth
 
-  # API
-  def add_fee_to_be_collected(token, value) do
-    State.add_fee(token, value)
+  @type token :: atom
+  @type tx_hash :: String.t
+  @type tx_option :: {:gas_price, pos_integer} | {:from, String.t} | {:contract, String.t}
+  @type error :: {:error, atom}
+
+  #TODO: use value instead of amount
+
+  ### API ###
+  @spec accumulate_fees(token, integer) :: :ok
+  def accumulate_fees(token, value) do
+    :ok = State.add_fee(token, value)
   end
 
-  def start_fee_exit(token, gas_price) do
-    {:ok, value} = State.preexit_token(token)
-    result = Eth.start_fee_exit(token, value, gas_price)
-    Logger.info("Starting #{token} exit, have accumulated #{value} of tokens")
-    result
+  @spec start_fee_exit(token, [tx_option]) :: {:ok, tx_hash} | error
+  def start_fee_exit(token, opts \\ []) do
+    {:ok, value} = State.move_to_pending(token)
+    Eth.start_fee_exit(token, value, opts)
+    |> build_info(token, value)
+    |> handle_sent_transaction()
   end
 
-  def confirm_fee_exit_started(token) do
-    :ok = State.confirm_token_exited(token)
-    Logger.info("Confirmed token (#{token}})stared exit")
+  @spec confirm_pending_exit_start(token) :: :ok | error
+  def confirm_pending_exit_start(token) do
+    :ok = State.confirm_pending(token)
+    :ok = Logger.info("Confirmed stared exit: #{token}")
+    :ok
   end
 
-  def cancel_token_exit(token) do
-    :ok = State.cancel_preexit(token)
-    Logger.info("Canceled token (#{token}}) exit")
+  @spec cancel_pending_exit_start(token) :: :ok | error
+  def cancel_pending_exit_start(token) do
+    :ok = State.cancel_pending(token)
+    Logger.info("Canceled token exit: #{token}")
   end
+
+  ### PRIVATE ###
+
+  defp handle_sent_transaction([:ok | info]) do
+    {:token, token} = Enum.at(info, 0)
+    {:tx_hash, tx_hash} = Enum.at(info, 2)
+    :ok = State.set_tx_hash_of_pending(token, tx_hash)
+    :ok = Logger.info("Transaction to start exit was succesfully sent: #{inspect info}")
+    {:ok, tx_hash}
+  end
+
+  defp handle_sent_transaction([:error | info]) do
+    {:token, token} = Enum.at(info, 0)
+    {:error, error} = Enum.at(info, 2)
+    :ok = State.cancel_pending(token)
+    :ok = Logger.error("Sending transaction failed: #{inspect info}")
+    {:error, error}
+  end
+
+  defp build_info({:ok, tx_hash}, token, value), do: [:ok, token: token, value: value, tx_hash: tx_hash]
+  defp build_info({:error, reason}, token, value), do: [:error, token: token, value: value, error: reason]
 
 end
