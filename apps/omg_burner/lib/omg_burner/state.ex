@@ -30,7 +30,7 @@ defmodule OMG.Burner.State do
 
   @spec get_pending_fees(OMG.Burner.token) :: {:ok, pos_integer, OMG.Burner.tx_hash}
   def get_pending_fees(token) when is_atom(token) do
-    GenServer.call(__MODULE__, {:get_preexited, token})
+    GenServer.call(__MODULE__, {:get_pending, token})
   end
 
   @spec get_pending_fees() :: list({atom, pos_integer, OMG.Burner.tx_hash})
@@ -43,14 +43,20 @@ defmodule OMG.Burner.State do
     GenServer.call(__MODULE__, {:get_accumulated, token})
   end
 
-  @spec get_accumualted_fees() :: list({atom, pos_integer})
-  def get_accumualted_fees() do
+  @spec get_accumulated_fees() :: list({atom, pos_integer})
+  def get_accumulated_fees() do
     GenServer.call(__MODULE__, :get_accumulated)
   end
 
+  @spec set_tx_hash_to_pending(OMG.Burner.token, OMG.Burner.tx_hash) :: :ok | OMG.Burner.error
+  def set_tx_hash_to_pending(token, hash) when is_atom(token) do
+    GenServer.call(__MODULE__, {:set_pending_hash, token, hash})
+  end
+
+
   # GenServer
 
-  def init({_accumulated, _preexited} = state) do
+  def init({_accumulated, _pending} = state) do
     {:ok, state}
   end
 
@@ -69,15 +75,16 @@ defmodule OMG.Burner.State do
   end
 
   def handle_call(:get_accumulated, _from, {accumulated, _} = state) do
-
     {:reply, Map.to_list(accumulated), state}
   end
 
   def handle_call({:get_pending, token}, _from, {_, pending} = state) do
     reply =
-      case Map.fetch(pending, token) do
-        {:ok, map} -> {:ok, map_pending({token, map})}
-        {:error, reason} -> {:error, reason}
+      with {:ok, map} <- Map.fetch(pending, token) do
+        {_, value, hash} = map_pending({token, map})
+        {:ok, value, hash}
+      else
+        :error -> {:error, :no_such_record}
       end
     {:reply, reply, state}
   end
@@ -100,6 +107,11 @@ defmodule OMG.Burner.State do
     {:reply, reply, new_state}
   end
 
+  def handle_call({:set_pending_hash, token, hash}, _from, {accumulated, pending} = state) do
+    {reply, updated_pending} = do_set_pending_hash(token, hash, pending)
+    {:reply, reply, {accumulated, updated_pending}}
+  end
+
   defp do_add_fee(token, value, accumulated) do
     accumulated
     |> Map.update(token, value, &(&1 + value))
@@ -116,30 +128,42 @@ defmodule OMG.Burner.State do
 
     else
       {:ok, _} -> {{:error, :exit_already_started}, state}
-      _ -> {{:error, :nothing_to_exit}, state}
+      _ -> {{:error, :no_such_record}, state}
     end
   end
 
+  # TODO: rename
   defp move_to_pending(token, {accumulated, pending}) do
     {value, updated_accumulated} = Map.pop(accumulated, token)
-    updated_pending = Map.put_new(pending, token, %{value: value})
+    updated_pending = Map.put_new(pending, token, %{value: value, tx_hash: nil})
     {updated_accumulated, updated_pending}
   end
 
   defp do_confirm_exit(token, pending) do
     case Map.fetch(pending, token) do
       {:ok, _} -> {:ok, Map.delete(pending, token)}
-      _ -> {{:error, :nothing_to_confirm}, pending}
+      _ -> {{:error, :no_such_record}, pending}
     end
   end
 
   defp do_cancel_exit(token, {accumulated, pending} = state) do
-    case Map.fetch(pending, token) do
-      {:ok, value} -> {:ok, {do_add_fee(token, value, accumulated), Map.delete(pending, token)}}
-      _ -> {{:error, :nothing_to_cancel}, state}
+    with {:ok, %{value: value}} <- Map.fetch(pending, token) do
+      {:ok, {do_add_fee(token, value, accumulated), Map.delete(pending, token)}}
+    else
+      _ -> {{:error, :no_such_record}, state}
     end
   end
 
+  defp do_set_pending_hash(token, hash, pending) do
+    with {:ok, %{value: value, tx_hash: nil}} <- Map.fetch(pending, token) do
+      {:ok, Map.put(pending, token, %{value: value, tx_hash: hash})}
+    else
+      :error -> {{:error, :no_such_record}, pending}
+      {:ok, %{value: _, tx_hash: _}} -> {{:error, :already_set}, pending}
+    end
+  end
+
+  # TODO: rename
   defp map_pending({token, %{value: value, tx_hash: tx_hash}})do
     {token, value, tx_hash}
   end
