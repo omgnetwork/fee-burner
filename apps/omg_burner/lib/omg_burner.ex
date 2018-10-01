@@ -9,8 +9,6 @@ defmodule OMG.Burner do
   @type tx_option :: {:gas_price, pos_integer} | {:from, String.t} | {:contract, String.t}
   @type error :: {:error, atom}
 
-  #TODO: use value instead of amount
-
   ### API ###
   @spec accumulate_fees(token, integer) :: :ok
   def accumulate_fees(token, value) do

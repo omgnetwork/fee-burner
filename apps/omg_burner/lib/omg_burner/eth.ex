@@ -26,11 +26,11 @@ defmodule OMG.Burner.Eth do
 
   end
 
-  def start_fee_exit(token, amount, gas_price) when is_atom(token)do
-    {:ok, tx_hash} = GenServer.call(__MODULE__, {:start, token, amount, gas_price})
+  def start_fee_exit(token, value, gas_price) when is_atom(token)do
+    {:ok, tx_hash} = GenServer.call(__MODULE__, {:start, token, value, gas_price})
   end
 
-  def handle_call({:start, token, amount, gas_price}, _from, state) do
+  def handle_call({:start, token, value, gas_price}, _from, state) do
 
     refresh_period = Map.get(state, :refresh_period)
     authority = Map.get(state, :authority)
@@ -40,7 +40,7 @@ defmodule OMG.Burner.Eth do
                     |> Map.fetch!(:address)
 
     IO.inspect(token_address)
-    {:ok, tx_hash} = Eth.RootChain.start_fee_exit(token_address, amount, gas_price, authority)
+    {:ok, tx_hash} = Eth.RootChain.start_fee_exit(token_address, value, gas_price, authority)
     Process.send_after(self(), {:wait, tx_hash, token, 0}, refresh_period)
 
     {:reply, {:ok, tx_hash}, state}
