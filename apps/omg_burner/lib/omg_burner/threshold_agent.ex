@@ -70,23 +70,24 @@ defmodule OMG.Burner.ThresholdAgent do
 
   defp check_thresholds() do
 
-    preexited_tokens = State.get_preexited_fees()
-                       |> Map.keys()
+    pending_tokens = State.get_pending_fees()
+                     |> Enum.map(fn ({token, _, _}) -> token end)
     accumulated_tokens = State.get_accumulated_fees()
-                         |> Map.keys()
+                         |> Enum.map(fn ({token, _}) -> token end)
 
-    tokens_to_check = accumulated_tokens -- preexited_tokens
+    tokens_to_check = accumulated_tokens -- pending_tokens
 
     Enum.each(tokens_to_check, &check_threshold/1)
 
   end
 
   defp check_threshold(token) do
-    threshold_info = Application.get_env(:omg_burner, :threshold)
+    threshold_info = Application.get_env(:omg_burner, :thresholds)
                      |> Map.get(token)
     with :ready <- do_check_threshold(token, threshold_info) do
-      current_gas_price = OMG.Burner.HttpRequester.get_gas_price()
-      OMG.Burner.start_fee_exit(token, current_gas_price)
+      {:ok, current_gas_price} = OMG.Burner.HttpRequester.get_gas_price()
+      current_gas_price = current_gas_price * :math.pow(10,9) |> round
+      OMG.Burner.start_fee_exit(token, %{gas_price: current_gas_price})
     else
       :unsupported_token -> Logger.error("Missing configuration for #{token}")
     end
@@ -100,16 +101,15 @@ defmodule OMG.Burner.ThresholdAgent do
     currency = Map.fetch!(info, :currency)
     threshold_value = Map.fetch!(info, :value)
 
-    price = Requester.get_token_price(token_id, currency)
+    {:ok, price} = Requester.get_token_price(token_id, currency)
 
-    accumualted = State.get_accumulated_fees(token)
+    {:ok, accumulated} = State.get_accumulated_fees(token)
 
-    check_ready(accumualted, price, threshold_value, decimals)
+    check_ready(accumulated, price, threshold_value, decimals)
 
   end
 
   defp check_ready(accumulated, price, threshold, decimals) do
-
     case (accumulated / :math.pow(10, decimals)) * price >= threshold do
       true -> :ready
       false -> :not_ready

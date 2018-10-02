@@ -4,8 +4,8 @@ defmodule OMG.Burner.Eth do
   use AdjustableServer
   alias OMG.Eth
 
-  @success "0x01"
-  @failure "0x00"
+  @success "0x1"
+  @failure "0x0"
 
   def start_link(args \\ %{}) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
@@ -29,7 +29,7 @@ defmodule OMG.Burner.Eth do
   end
 
   def start_fee_exit(token, value, %{gas_price: _} = opts) when is_atom(token)do
-    {:ok, tx_hash} = GenServer.call(__MODULE__, {:start, token, value, opts})
+    GenServer.call(__MODULE__, {:start, token, value, opts})
   end
 
   def handle_call({:start, token, value, opts}, _from, state) do
@@ -56,19 +56,20 @@ defmodule OMG.Burner.Eth do
     {:noreply, state}
   end
 
-  defp do_handle_wait(_, token, count, max_count, _) when count > max_count, do: OMG.Burner.cancel_token_exit(token)
+  defp do_handle_wait(_, token, count, max_count, _) when count > max_count,
+       do: OMG.Burner.cancel_pending_exit_start(token)
 
   defp do_handle_wait(tx_hash, token, count, _, refresh_period)do
     case Ethereumex.HttpClient.eth_get_transaction_receipt(tx_hash) do
       {:ok, receipt} when receipt != nil -> process_receipt(receipt, token)
-      _ -> Process.send_after(self(), {:wait, tx_hash, count + 1}, refresh_period)
+      _ -> Process.send_after(self(), {:wait, tx_hash, token, count + 1}, refresh_period)
     end
     :ok
   end
 
-  defp process_receipt(%{status: status} = _receipt, token) when status == @failure,
-       do: OMG.Burner.cancel_token_exit(token)
-  defp process_receipt(%{status: status} = _receipt, token) when status == @success,
-       do: OMG.Burner.confirm_fee_exit_started(token)
+  defp process_receipt(%{"status" => status}, token) when status == @success,
+       do: OMG.Burner.confirm_pending_exit_start(token)
 
+  defp process_receipt(%{"status" => status}, token) when status == @failure,
+       do: OMG.Burner.cancel_pending_exit_start(token)
 end

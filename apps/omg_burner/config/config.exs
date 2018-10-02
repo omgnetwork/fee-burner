@@ -1,5 +1,10 @@
 use Mix.Config
 
+config :logger, :console,
+       level: :info,
+       format: "$date $time [$level] $message\n",
+       metadata: [:module, :function, :request_id]
+
 config :ethereumex,
        scheme: "http",
        host: "localhost",
@@ -12,6 +17,7 @@ config :ethereumex,
 # TODO : add missing configs
 config :omg_burner,
        max_gas_price:  30, # in gwei
+       max_checks: 10000,
        refresh_period: :math.pow(10, 3) |> round,
        casual_period: 60 * :math.pow(10, 3) |>  round,  # in milliseconds
        short_period: 10 * :math.pow(10, 3) |> round,   # in milliseconds

@@ -37,7 +37,7 @@ defmodule OMG.Burner do
 
   @spec cancel_pending_exit_start(token) :: :ok | error
   def cancel_pending_exit_start(token) do
-    :ok = State.cancel_pending(token)
+    :ok = State.cancel_exit(token)
     Logger.info("Canceled token exit: #{token}")
   end
 
@@ -54,7 +54,7 @@ defmodule OMG.Burner do
   defp handle_sent_transaction([:error | info]) do
     {:token, token} = Enum.at(info, 0)
     {:error, error} = Enum.at(info, 2)
-    :ok = State.cancel_pending(token)
+    :ok = State.cancel_exit(token)
     :ok = Logger.error("Sending transaction failed: #{inspect info}")
     {:error, error}
   end

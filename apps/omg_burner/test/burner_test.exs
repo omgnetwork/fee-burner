@@ -3,6 +3,7 @@ defmodule OMG.BurnerTest do
   use ExUnitFixtures
   use ExUnit.Case
 
+  alias OMG.Burner
   alias OMG.Burner.State
 
   @moduletag :integration
@@ -11,7 +12,6 @@ defmodule OMG.BurnerTest do
   @one_eth :math.pow(10, 18)
            |> round
 
-  @tag fixtures: [:authority]
   setup() do
     OMG.Burner.State.start_link()
     OMG.Burner.Eth.start_link()
@@ -35,20 +35,30 @@ defmodule OMG.BurnerTest do
     assert State.get_accumulated_fees(ETH) == {:error, :no_such_record}
     assert State.get_pending_fees(ETH) == {:ok, @one_eth, tx_hash}
 
-    :ok = OMG.Burner.confirm_pending_exit_start(ETH)
+    :ok = Burner.confirm_pending_exit_start(ETH)
 
     assert State.get_accumulated_fees(ETH) == {:error, :no_such_record}
     assert State.get_pending_fees(ETH) == {:error, :no_such_record}
 
   end
 
-  #  test "start fee exit automatically" do
-  #    # start server that takes care of starting exits automatically
-  #
-  #  end
-  #
-  #  test "deposit, report fees to the microservice, make an exchange - AKA happy path" do
-  #
-  #  end
+  @tag fixtures: [:authority, :root_chain]
+  test "deposit, report fees to the microservice, make an exchange - AKA happy path",
+       %{authority: authority, root_chain: root_chain} do
 
+    OMG.Burner.Eth.set(:authority, authority)
+    OMG.Burner.Eth.set(:contract, root_chain)
+
+    OMG.Burner.ThresholdAgent.start_link() # TODO: move
+
+    :ok = deposit(@one_eth, authority, root_chain)
+    OMG.Burner.accumulate_fees(ETH, @one_eth)
+
+    # sleep for two second so worker threads could start fee exit automatically and transaction to be mined and confirmed
+    :timer.sleep(10_000)
+
+    assert State.get_accumulated_fees(ETH) == {:error, :no_such_record}
+    assert State.get_pending_fees(ETH) == {:error, :no_such_record}
+
+  end
 end

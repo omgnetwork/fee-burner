@@ -174,8 +174,4 @@ defmodule OMG.Burner.State do
     {token, value, tx_hash}
   end
 
-  defp map_pending({token, %{value: value}}) do
-    {token, value, nil}
-  end
-
 end
