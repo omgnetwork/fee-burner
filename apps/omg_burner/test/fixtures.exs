@@ -12,18 +12,19 @@ defmodule OMG.Burner.Fixtures do
   end
 
   deffixture ethereumex (geth) do
+    :ok = geth
     {:ok, _} = Application.ensure_all_started(:ethereumex)
     :ok
   end
 
   deffixture authority(ethereumex) do
     :ok = ethereumex
-    authority = create_unlock_and_fund_entity()
+    create_unlock_and_fund_entity()
   end
 
   deffixture root_chain(authority) do
     burner_addr = "0x00"
-    {:ok, contract, tx_hash} = create_root_chain("../../", authority, burner_addr)
+    {:ok, contract, _} = create_root_chain("../../", authority, burner_addr)
     contract
   end
 

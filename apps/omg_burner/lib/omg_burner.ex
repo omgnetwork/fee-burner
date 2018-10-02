@@ -6,7 +6,11 @@ defmodule OMG.Burner do
 
   @type token :: atom
   @type tx_hash :: String.t
-  @type tx_option :: {:gas_price, pos_integer} | {:from, String.t} | {:contract, String.t}
+  @type tx_options :: %{
+                        required(:gas_price) => pos_integer,
+                        optional(:from) => String.t,
+                        optional(:contract) => String.t
+                      }
   @type error :: {:error, atom}
 
   ### API ###
@@ -15,18 +19,19 @@ defmodule OMG.Burner do
     :ok = State.add_fee(token, value)
   end
 
-  @spec start_fee_exit(token, [tx_option]) :: {:ok, tx_hash} | error
-  def start_fee_exit(token, opts \\ []) do
+  @spec start_fee_exit(token, tx_options) :: {:ok, tx_hash} | error
+  def start_fee_exit(token, opts) do
     {:ok, value} = State.move_to_pending(token)
     Eth.start_fee_exit(token, value, opts)
-    |> build_info(token, value)
-    |> handle_sent_transaction()
+        |> build_info(token, value)
+        |> handle_sent_transaction()
+
   end
 
   @spec confirm_pending_exit_start(token) :: :ok | error
   def confirm_pending_exit_start(token) do
     :ok = State.confirm_pending(token)
-    :ok = Logger.info("Confirmed stared exit: #{token}")
+    :ok = Logger.info("Confirmed started exit: #{token}")
     :ok
   end
 
@@ -42,7 +47,7 @@ defmodule OMG.Burner do
     {:token, token} = Enum.at(info, 0)
     {:tx_hash, tx_hash} = Enum.at(info, 2)
     :ok = State.set_tx_hash_of_pending(token, tx_hash)
-    :ok = Logger.info("Transaction to start exit was succesfully sent: #{inspect info}")
+    :ok = Logger.info("Transaction to start exit was successfully sent: #{inspect info}")
     {:ok, tx_hash}
   end
 

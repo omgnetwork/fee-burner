@@ -48,8 +48,8 @@ defmodule OMG.Burner.State do
     GenServer.call(__MODULE__, :get_accumulated)
   end
 
-  @spec set_tx_hash_to_pending(OMG.Burner.token, OMG.Burner.tx_hash) :: :ok | OMG.Burner.error
-  def set_tx_hash_to_pending(token, hash) when is_atom(token) do
+  @spec set_tx_hash_of_pending(OMG.Burner.token, OMG.Burner.tx_hash) :: :ok | OMG.Burner.error
+  def set_tx_hash_of_pending(token, hash) when is_atom(token) do
     GenServer.call(__MODULE__, {:set_pending_hash, token, hash})
   end
 
@@ -71,7 +71,13 @@ defmodule OMG.Burner.State do
   end
 
   def handle_call({:get_accumulated, token}, _from, {accumulated, _} = state) do
-    {:reply, Map.fetch(accumulated, token), state}
+    reply =
+      case Map.fetch(accumulated, token) do
+        {:ok, result} -> {:ok, result}
+        :error -> {:error, :no_such_record}
+      end
+
+    {:reply, reply, state}
   end
 
   def handle_call(:get_accumulated, _from, {accumulated, _} = state) do

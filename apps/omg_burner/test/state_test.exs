@@ -21,7 +21,7 @@ defmodule OMG.Burner.StateTest do
   end
 
   def test_accumulated(token, 0) do
-    :error = State.get_accumulated_fees(token)
+    {:error, :no_such_record} = State.get_accumulated_fees(token)
   end
 
   def test_accumulated(token, value) do
@@ -173,7 +173,7 @@ defmodule OMG.Burner.StateTest do
 
     State.move_to_pending(TOKEN0)
 
-    :ok = State.set_tx_hash_to_pending(TOKEN0, "0x0")
+    :ok = State.set_tx_hash_of_pending(TOKEN0, "0x0")
 
     {:ok, @test_value, "0x0"} = State.get_pending_fees(TOKEN0)
 
@@ -182,8 +182,8 @@ defmodule OMG.Burner.StateTest do
   test "set tx_hash to pending where hash has already been set" do
 
     State.move_to_pending(TOKEN0)
-    :ok = State.set_tx_hash_to_pending(TOKEN0, "0x0")
-    {:error, :already_set} = State.set_tx_hash_to_pending(TOKEN0, "0x0")
+    :ok = State.set_tx_hash_of_pending(TOKEN0, "0x0")
+    {:error, :already_set} = State.set_tx_hash_of_pending(TOKEN0, "0x0")
 
     {:ok, @test_value, "0x0"} = State.get_pending_fees(TOKEN0)
 
