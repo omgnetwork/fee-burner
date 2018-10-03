@@ -39,9 +39,13 @@ defmodule OMG.Burner.Eth do
     gas_price = Map.fetch!(opts, :gas_price)
 
     refresh_period = Map.fetch!(state, :refresh_period)
+
     token_address = Application.get_env(:omg_burner, :thresholds)
                     |> Map.fetch!(token)
                     |> Map.fetch!(:address)
+
+
+    IO.puts(inspect %{contract: contract, authority: authority, gas_price: gas_price})
 
     {:ok, tx_hash} = Eth.RootChain.start_fee_exit(token_address, value, gas_price, authority, contract)
     Process.send_after(self(), {:wait, tx_hash, token, 0}, refresh_period)

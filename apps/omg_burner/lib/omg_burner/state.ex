@@ -87,7 +87,7 @@ defmodule OMG.Burner.State do
   def handle_call({:get_pending, token}, _from, {_, pending} = state) do
     reply =
       with {:ok, map} <- Map.fetch(pending, token) do
-        {_, value, hash} = map_pending({token, map})
+        {_, value, hash} = format_pending_to_return({token, map})
         {:ok, value, hash}
       else
         :error -> {:error, :no_such_record}
@@ -98,7 +98,7 @@ defmodule OMG.Burner.State do
   def handle_call(:get_pending, _from, {_, pending} = state) do
     reply = pending
             |> Map.to_list()
-            |> Enum.map(&map_pending/1)
+            |> Enum.map(&format_pending_to_return/1)
 
     {:reply, reply, state}
   end
@@ -113,7 +113,7 @@ defmodule OMG.Burner.State do
     {:reply, reply, new_state}
   end
 
-  def handle_call({:set_pending_hash, token, hash}, _from, {accumulated, pending} = state) do
+  def handle_call({:set_pending_hash, token, hash}, _from, {accumulated, pending} = _state) do
     {reply, updated_pending} = do_set_pending_hash(token, hash, pending)
     {:reply, reply, {accumulated, updated_pending}}
   end
@@ -129,7 +129,7 @@ defmodule OMG.Burner.State do
     with :error <- Map.fetch(pending, token),
          {:ok, value} <- Map.fetch(accumulated, token) do
 
-      updated_state = move_to_pending(token, state)
+      updated_state = move_token_to_pending(token, state)
       {{:ok, value}, updated_state}
 
     else
@@ -138,8 +138,7 @@ defmodule OMG.Burner.State do
     end
   end
 
-  # TODO: rename
-  defp move_to_pending(token, {accumulated, pending}) do
+  defp move_token_to_pending(token, {accumulated, pending}) do
     {value, updated_accumulated} = Map.pop(accumulated, token)
     updated_pending = Map.put_new(pending, token, %{value: value, tx_hash: nil})
     {updated_accumulated, updated_pending}
@@ -169,8 +168,7 @@ defmodule OMG.Burner.State do
     end
   end
 
-  # TODO: rename
-  defp map_pending({token, %{value: value, tx_hash: tx_hash}})do
+  defp format_pending_to_return({token, %{value: value, tx_hash: tx_hash}})do
     {token, value, tx_hash}
   end
 

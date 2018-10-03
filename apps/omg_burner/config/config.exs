@@ -14,7 +14,7 @@ config :ethereumex,
        http_options: [
          recv_timeout: :infinity
        ]
-# TODO : add missing configs
+       
 config :omg_burner,
        max_gas_price:  30, # in gwei
        max_checks: 10000,

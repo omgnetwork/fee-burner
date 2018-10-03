@@ -19,23 +19,52 @@ defmodule OMG.Burner.Fixtures do
 
   deffixture authority(ethereumex) do
     :ok = ethereumex
-    create_unlock_and_fund_entity()
+    authority = create_unlock_and_fund_entity()
+    Application.put_env(:omg_burner, :authority, authority)
+
+    on_exit(
+      fn ->
+        Application.put_env(:omg_burner, :authority, nil)
+      end
+    )
+
+    authority
   end
 
   deffixture root_chain(authority) do
     burner_addr = "0x00"
     {:ok, contract, _} = create_root_chain("../../", authority, burner_addr)
+
+    Application.put_env(:omg_burner, :contract, contract)
+
+    on_exit(
+      fn ->
+        Application.put_env(:omg_burner, :contract, nil)
+      end
+    )
+
     contract
   end
 
-  deffixture environment(ethereumex) do
-    :ok = ethereumex
-    OMG.Burner.DevHelpers.prepare_env!("../../")
+  deffixture state() do
+    {:ok, _} = OMG.Burner.State.start_link()
+    :ok
   end
 
-  deffixture alice(ethereumex) do
-    :ok = ethereumex
-    OMG.Burner.DevHelpers.create_unlock_and_fund_entity()
+  deffixture eth(root_chain, authority) do
+    if root_chain == nil or authority == nil do
+      :error
+    else
+      {:ok, _} = OMG.Burner.Eth.start_link()
+      :ok
+    end
+  end
+
+  deffixture agent(eth, state) do
+    :ok = state
+    :ok = eth
+    {:ok, _} = OMG.Burner.ThresholdAgent.start_link()
+    :ok
   end
 
   deffixture tx_opts(authority, root_chain) do

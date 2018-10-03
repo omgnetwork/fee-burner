@@ -31,14 +31,14 @@ defmodule OMG.Burner do
   @spec confirm_pending_exit_start(token) :: :ok | error
   def confirm_pending_exit_start(token) do
     :ok = State.confirm_pending(token)
-    :ok = Logger.info("Confirmed started exit: #{token}")
+    :ok = Logger.info("Confirmed started exit: #{inspect token}")
     :ok
   end
 
   @spec cancel_pending_exit_start(token) :: :ok | error
   def cancel_pending_exit_start(token) do
     :ok = State.cancel_exit(token)
-    Logger.info("Canceled token exit: #{token}")
+    Logger.info("Canceled token exit: #{inspect token}")
   end
 
   ### PRIVATE ###

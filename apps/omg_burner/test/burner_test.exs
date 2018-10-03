@@ -8,15 +8,9 @@ defmodule OMG.BurnerTest do
 
   @moduletag :integration
 
-  @timeout 20_000
+  @timeout 10_000
   @one_eth :math.pow(10, 18)
            |> round
-
-  setup() do
-    OMG.Burner.State.start_link()
-    OMG.Burner.Eth.start_link()
-    :ok
-  end
 
   defp deposit(value, from, contract) do
     {:ok, tx_hash} = OMG.Eth.RootChain.deposit(value, from, contract)
@@ -24,8 +18,9 @@ defmodule OMG.BurnerTest do
     :ok
   end
 
-  @tag fixtures: [:authority, :root_chain, :tx_opts]
-  test "start fee exit manually", %{authority: authority, root_chain: root_chain, tx_opts: opts} do
+
+  @tag fixtures: [:authority, :root_chain, :tx_opts, :state, :eth]
+  test "start fee exit manually", %{authority: authority, root_chain: root_chain, tx_opts: opts, state: :ok, eth: :ok} do
 
     :ok = deposit(@one_eth, authority, root_chain)
 
@@ -42,27 +37,23 @@ defmodule OMG.BurnerTest do
 
   end
 
-  @tag fixtures: [:authority, :root_chain]
+  @tag :current
+  @tag fixtures: [:root_chain, :authority, :agent]
   test "deposit, report fees to the microservice, make an exchange - AKA happy path",
-       %{authority: authority, root_chain: root_chain} do
-
-    OMG.Burner.Eth.set(:authority, authority)
-    OMG.Burner.Eth.set(:contract, root_chain)
-
-    OMG.Burner.ThresholdAgent.start_link() # TODO: move
+       %{root_chain: root_chain, authority: authority, agent: :ok} do
 
     :ok = deposit(@one_eth, authority, root_chain)
     OMG.Burner.accumulate_fees(ETH, @one_eth)
 
     # sleep for 10 seconds so background threads can start fee exit automatically
     # also wait for a transaction to be mined and confirmed
-    :timer.sleep(10_000)
+    :timer.sleep(@timeout)
 
     assert State.get_accumulated_fees(ETH) == {:error, :no_such_record}
     assert State.get_pending_fees(ETH) == {:error, :no_such_record}
 
   end
+
 end
 
-# TODO: add clean-ups
 # TODO: gas price is a of magnitude to high

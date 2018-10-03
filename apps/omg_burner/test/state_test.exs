@@ -6,6 +6,7 @@ defmodule OMG.Burner.StateTest do
 
   @test_value 10
 
+  # TODO: change setup into a fixture
   setup do
     {:ok, pid} = State.start_link()
 
@@ -73,8 +74,6 @@ defmodule OMG.Burner.StateTest do
     test_token_values(TOKEN0, @test_value, @test_value)
 
   end
-
-  #todo: add tx_hash
 
   test "confirm fee exited" do
 
