@@ -10,7 +10,9 @@ defmodule OMG.Burner.HttpRequesterTest do
   @tag fixtures: [:gasstation_response]
   test "decode gas_price from gas station's response", %{gasstation_response: response} do
 
-    assert Requester.decode_gas_price(response) == {:ok, 28.0}
+    expected_price = 2.8 * :math.pow(10,9) |> round
+
+    assert Requester.decode_gas_price(response) == {:ok, expected_price}
 
   end
 
@@ -23,7 +25,7 @@ defmodule OMG.Burner.HttpRequesterTest do
   end
 
   @tag :integration
-  test "get gas price from gas station" do
+  test "get gas price from ethgasstation" do
     HTTPoison.start()
     {:ok, _} = Requester.get_gas_price()
   end

@@ -55,5 +55,3 @@ defmodule OMG.BurnerTest do
   end
 
 end
-
-# TODO: gas price is a of magnitude to high

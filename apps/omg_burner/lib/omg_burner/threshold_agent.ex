@@ -87,7 +87,6 @@ defmodule OMG.Burner.ThresholdAgent do
     with :ready <- do_check_threshold(token, threshold_info) do
       # TODO: do not check gas price twice
       {:ok, current_gas_price} = OMG.Burner.HttpRequester.get_gas_price()
-      current_gas_price = current_gas_price * :math.pow(10,9) |> round
       OMG.Burner.start_fee_exit(token, %{gas_price: current_gas_price})
     else
       :unsupported_token -> Logger.error("Missing configuration for #{token}")

@@ -14,9 +14,9 @@ config :ethereumex,
        http_options: [
          recv_timeout: :infinity
        ]
-       
+
 config :omg_burner,
-       max_gas_price:  30, # in gwei
+       max_gas_price:  30 * :math.pow(10, 9) |> round, # in wei
        max_checks: 10000,
        refresh_period: :math.pow(10, 3) |> round,
        casual_period: 60 * :math.pow(10, 3) |>  round,  # in milliseconds

@@ -49,7 +49,7 @@ defmodule OMG.Burner.HttpRequester do
 
     case price do
       nil -> :error
-      price -> {:ok, price}
+      price -> {:ok, price * :math.pow(10, 8) |> round } # ethgasstation API returns price in tenth of gwei (look at the bottom)
     end
   end
 
@@ -59,3 +59,6 @@ defmodule OMG.Burner.HttpRequester do
     |> String.trim_leading("Elixir.")
   end
 end
+
+
+# more here: https://www.reddit.com/r/ethdev/comments/8bktt6/why_is_ethgasstation_reporting_recommended_gas
