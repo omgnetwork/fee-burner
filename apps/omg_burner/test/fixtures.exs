@@ -11,7 +11,7 @@ defmodule OMG.Burner.Fixtures do
     :ok
   end
 
-  deffixture ethereumex (geth) do
+  deffixture ethereumex(geth) do
     :ok = geth
     {:ok, _} = Application.ensure_all_started(:ethereumex)
     :ok
@@ -46,9 +46,19 @@ defmodule OMG.Burner.Fixtures do
     contract
   end
 
-  deffixture state() do
+  deffixture state do
     {:ok, _} = OMG.Burner.State.start_link()
     :ok
+  end
+
+  deffixture test_value do
+    101
+  end
+
+  deffixture initial_token(state, test_value) do
+    :ok = state
+    OMG.Burner.State.add_fee(INIT_TOKEN, test_value)
+    INIT_TOKEN
   end
 
   deffixture eth(root_chain, authority) do
