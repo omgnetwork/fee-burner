@@ -1,5 +1,4 @@
 defmodule OMG.BurnerTest do
-
   use ExUnitFixtures
   use ExUnit.Case
 
@@ -18,10 +17,8 @@ defmodule OMG.BurnerTest do
     :ok
   end
 
-
   @tag fixtures: [:authority, :root_chain, :tx_opts, :state, :eth]
   test "start fee exit manually", %{authority: authority, root_chain: root_chain, tx_opts: opts, state: :ok, eth: :ok} do
-
     :ok = deposit(@one_eth, authority, root_chain)
 
     OMG.Burner.accumulate_fees(ETH, @one_eth)
@@ -34,14 +31,12 @@ defmodule OMG.BurnerTest do
 
     assert State.get_accumulated_fees(ETH) == {:error, :no_such_record}
     assert State.get_pending_fees(ETH) == {:error, :no_such_record}
-
   end
 
   @tag :current
   @tag fixtures: [:root_chain, :authority, :agent]
   test "deposit, report fees to the microservice, make an exchange - AKA happy path",
        %{root_chain: root_chain, authority: authority, agent: :ok} do
-
     :ok = deposit(@one_eth, authority, root_chain)
     OMG.Burner.accumulate_fees(ETH, @one_eth)
 
@@ -51,7 +46,5 @@ defmodule OMG.BurnerTest do
 
     assert State.get_accumulated_fees(ETH) == {:error, :no_such_record}
     assert State.get_pending_fees(ETH) == {:error, :no_such_record}
-
   end
-
 end

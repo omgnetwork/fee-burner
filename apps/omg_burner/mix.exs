@@ -20,7 +20,7 @@ defmodule OMG.Burner.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {OMG.Burner.Application, []},
+      mod: {OMG.Burner.Application, []}
     ]
   end
 
@@ -39,42 +39,27 @@ defmodule OMG.Burner.MixProject do
       },
       {
         :exw3,
-        git: "git@github.com:omisego/exw3.git",
-        branch: "gas_encoding"
+        git: "git@github.com:omisego/exw3.git", branch: "gas_encoding"
       },
       {
         :elixir_omg,
-        git: "git@github.com:pik694/elixir-omg.git",
-        branch: "feature/fee-burner",
-        env: :dev
+        git: "git@github.com:pik694/elixir-omg.git", branch: "feature/fee-burner", env: :dev
       },
       {
         :fee_burner_contracts,
-        path: "../../contracts",
-        compile: compile_fee_burner_contracts(),
-        app: false,
-        only: [:dev, :test]
+        path: "../../contracts", compile: compile_fee_burner_contracts(), app: false, only: [:dev, :test]
       },
       {
         :omisego,
-        path: "../../contracts",
-        compile: copy_omisego_contract(),
-        app: false,
-        only: [:dev, :test]
+        path: "../../contracts", compile: copy_omisego_contract(), app: false, only: [:dev, :test]
       },
       {
         :ethereumex,
-        env: :prod,
-        git: "https://github.com/omisego/ethereumex.git",
-        branch: "request_timeout",
-        override: true
+        env: :prod, git: "https://github.com/omisego/ethereumex.git", branch: "request_timeout", override: true
       },
       {
         :abi,
-        env: :prod,
-        git: "https://github.com/omisego/abi.git",
-        branch: "encode_dynamic_types",
-        override: true
+        env: :prod, git: "https://github.com/omisego/abi.git", branch: "encode_dynamic_types", override: true
       },
       {:httpoison, "~> 1.1"},
       {:poison, "~> 3.1"}
@@ -87,6 +72,7 @@ defmodule OMG.Burner.MixProject do
 
   defp compile_plasma_contracts do
     mixfile_path = File.cwd!()
+
     "cd #{mixfile_path}/../../ && source env/bin/activate && py-solc-simple -i deps/plasma_contracts/contracts/ -o contracts/build/"
   end
 
@@ -99,5 +85,4 @@ defmodule OMG.Burner.MixProject do
     mixfile_path = File.cwd!()
     "cd #{mixfile_path}/../../ && cp ./contracts/OmiseGO.json ./contracts/build/"
   end
-
 end

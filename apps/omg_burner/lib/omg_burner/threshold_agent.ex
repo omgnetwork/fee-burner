@@ -1,5 +1,4 @@
 defmodule OMG.Burner.ThresholdAgent do
-
   use AdjustableServer
 
   alias OMG.Burner.HttpRequester, as: Requester
@@ -12,7 +11,6 @@ defmodule OMG.Burner.ThresholdAgent do
 
   # GenServer
   def init(args) do
-
     casual_period = Map.get(args, :casual_period) || Application.get_env(:omg_burner, :casual_period)
     short_period = Map.get(args, :short_period) || Application.get_env(:omg_burner, :short_period) || casual_period
     max_gas_price = Map.get(args, :max_gas_price) || Application.get_env(:omg_burner, :max_gas_price)
@@ -31,8 +29,10 @@ defmodule OMG.Burner.ThresholdAgent do
   # handlers
 
   def handle_info(:loop, state) do
-    new_state = state
-                |> do_work()
+    new_state =
+      state
+      |> do_work()
+
     schedule_work(new_state)
     {:noreply, new_state}
   end
@@ -56,34 +56,38 @@ defmodule OMG.Burner.ThresholdAgent do
   defp check_gas_price(%{max_gas_price: max_gas_price} = _state) do
     with {:ok, current_price} <- Requester.get_gas_price(),
          true <- current_price <= max_gas_price do
-
       Logger.info("Current gas price: #{current_price}")
       :ok
-
     else
-      :error -> Logger.error("A problem with gas station occured. Check connection or API changes")
-                :error
-      false -> Logger.info("Gas price exceeds maximum value")
-               :error
+      :error ->
+        Logger.error("A problem with gas station occured. Check connection or API changes")
+        :error
+
+      false ->
+        Logger.info("Gas price exceeds maximum value")
+        :error
     end
   end
 
   defp check_thresholds() do
+    pending_tokens =
+      State.get_pending_fees()
+      |> Enum.map(fn {token, _, _} -> token end)
 
-    pending_tokens = State.get_pending_fees()
-                     |> Enum.map(fn ({token, _, _}) -> token end)
-    accumulated_tokens = State.get_accumulated_fees()
-                         |> Enum.map(fn ({token, _}) -> token end)
+    accumulated_tokens =
+      State.get_accumulated_fees()
+      |> Enum.map(fn {token, _} -> token end)
 
     tokens_to_check = accumulated_tokens -- pending_tokens
 
     Enum.each(tokens_to_check, &check_threshold/1)
-
   end
 
   defp check_threshold(token) do
-    threshold_info = Application.get_env(:omg_burner, :thresholds)
-                     |> Map.get(token)
+    threshold_info =
+      Application.get_env(:omg_burner, :thresholds)
+      |> Map.get(token)
+
     with :ready <- do_check_threshold(token, threshold_info) do
       # TODO: do not check gas price twice
       {:ok, current_gas_price} = OMG.Burner.HttpRequester.get_gas_price()
@@ -91,10 +95,12 @@ defmodule OMG.Burner.ThresholdAgent do
     else
       :unsupported_token -> Logger.error("Missing configuration for #{token}")
     end
+
     :ok
   end
 
   defp do_check_threshold(_token, nil), do: :unsupported_token
+
   defp do_check_threshold(token, info) do
     token_id = Map.fetch!(info, :coinmarketcap_id)
     decimals = Map.fetch!(info, :decimals)
@@ -106,14 +112,12 @@ defmodule OMG.Burner.ThresholdAgent do
     {:ok, accumulated} = State.get_accumulated_fees(token)
 
     check_ready(accumulated, price, threshold_value, decimals)
-
   end
 
   defp check_ready(accumulated, price, threshold, decimals) do
-    case (accumulated / :math.pow(10, decimals)) * price >= threshold do
+    case accumulated / :math.pow(10, decimals) * price >= threshold do
       true -> :ready
       false -> :not_ready
     end
   end
-
 end

@@ -1,5 +1,4 @@
 defmodule OMG.Burner.Fixtures do
-
   use ExUnitFixtures.FixtureModule
   import OMG.Burner.DevHelpers
 
@@ -22,11 +21,9 @@ defmodule OMG.Burner.Fixtures do
     authority = create_unlock_and_fund_entity()
     Application.put_env(:omg_burner, :authority, authority)
 
-    on_exit(
-      fn ->
-        Application.put_env(:omg_burner, :authority, nil)
-      end
-    )
+    on_exit(fn ->
+      Application.put_env(:omg_burner, :authority, nil)
+    end)
 
     authority
   end
@@ -37,11 +34,9 @@ defmodule OMG.Burner.Fixtures do
 
     Application.put_env(:omg_burner, :contract, contract)
 
-    on_exit(
-      fn ->
-        Application.put_env(:omg_burner, :contract, nil)
-      end
-    )
+    on_exit(fn ->
+      Application.put_env(:omg_burner, :contract, nil)
+    end)
 
     contract
   end
@@ -137,7 +132,5 @@ defmodule OMG.Burner.Fixtures do
             "error": null
         }
     })
-
   end
-
 end

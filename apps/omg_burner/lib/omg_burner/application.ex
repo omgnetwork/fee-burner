@@ -5,9 +5,7 @@ defmodule OMG.Burner.Application do
 
   use Application
 
-
   def start(_type, _args) do
-
     children = [
       OMG.Burner.State,
       OMG.Burner.Eth,
@@ -17,6 +15,5 @@ defmodule OMG.Burner.Application do
     opts = [strategy: :one_for_all]
 
     Supervisor.start_link(children, opts)
-
   end
 end

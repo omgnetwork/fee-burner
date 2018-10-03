@@ -21,31 +21,29 @@ defmodule OMG.Burner.Eth do
       max_checks: max_checks,
       refresh_period: refresh_period,
       contract: contract,
-      authority: authority,
+      authority: authority
     }
 
     {:ok, state}
-
   end
 
-  def start_fee_exit(token, value, %{gas_price: _} = opts) when is_atom(token)do
+  def start_fee_exit(token, value, %{gas_price: _} = opts) when is_atom(token) do
     GenServer.call(__MODULE__, {:start, token, value, opts})
   end
 
   def handle_call({:start, token, value, opts}, _from, state) do
-
     contract = Map.get(opts, :contract) || Map.fetch!(state, :contract)
     authority = Map.get(opts, :from) || Map.fetch!(state, :authority)
     gas_price = Map.fetch!(opts, :gas_price)
 
     refresh_period = Map.fetch!(state, :refresh_period)
 
-    token_address = Application.get_env(:omg_burner, :thresholds)
-                    |> Map.fetch!(token)
-                    |> Map.fetch!(:address)
+    token_address =
+      Application.get_env(:omg_burner, :thresholds)
+      |> Map.fetch!(token)
+      |> Map.fetch!(:address)
 
-
-    IO.puts(inspect %{contract: contract, authority: authority, gas_price: gas_price})
+    IO.puts(inspect(%{contract: contract, authority: authority, gas_price: gas_price}))
 
     {:ok, tx_hash} = Eth.RootChain.start_fee_exit(token_address, value, gas_price, authority, contract)
     Process.send_after(self(), {:wait, tx_hash, token, 0}, refresh_period)
@@ -61,19 +59,20 @@ defmodule OMG.Burner.Eth do
   end
 
   defp do_handle_wait(_, token, count, max_count, _) when count > max_count,
-       do: OMG.Burner.cancel_pending_exit_start(token)
+    do: OMG.Burner.cancel_pending_exit_start(token)
 
-  defp do_handle_wait(tx_hash, token, count, _, refresh_period)do
+  defp do_handle_wait(tx_hash, token, count, _, refresh_period) do
     case Ethereumex.HttpClient.eth_get_transaction_receipt(tx_hash) do
       {:ok, receipt} when receipt != nil -> process_receipt(receipt, token)
       _ -> Process.send_after(self(), {:wait, tx_hash, token, count + 1}, refresh_period)
     end
+
     :ok
   end
 
   defp process_receipt(%{"status" => status}, token) when status == @success,
-       do: OMG.Burner.confirm_pending_exit_start(token)
+    do: OMG.Burner.confirm_pending_exit_start(token)
 
   defp process_receipt(%{"status" => status}, token) when status == @failure,
-       do: OMG.Burner.cancel_pending_exit_start(token)
+    do: OMG.Burner.cancel_pending_exit_start(token)
 end

@@ -1,5 +1,4 @@
 defmodule OMG.Burner.State do
-
   use GenServer
 
   # API
@@ -7,38 +6,38 @@ defmodule OMG.Burner.State do
     GenServer.start_link(__MODULE__, initial_state, name: __MODULE__)
   end
 
-  @spec add_fee(OMG.Burner.token, integer) :: :ok
+  @spec add_fee(OMG.Burner.token(), integer) :: :ok
   def add_fee(token, value) when is_atom(token) and is_integer(value) do
     GenServer.cast(__MODULE__, {:add_fee, token, value})
     :ok
   end
 
-  @spec move_to_pending(OMG.Burner.token) :: {:ok, pos_integer} | OMG.Burner.error
+  @spec move_to_pending(OMG.Burner.token()) :: {:ok, pos_integer} | OMG.Burner.error()
   def move_to_pending(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:move_to_pending, token})
   end
 
-  @spec confirm_pending(OMG.Burner.token) :: :ok | OMG.Burner.error
+  @spec confirm_pending(OMG.Burner.token()) :: :ok | OMG.Burner.error()
   def confirm_pending(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:confirm_pending, token})
   end
 
-  @spec cancel_exit(OMG.Burner.token) :: :ok | OMG.Burner.error
+  @spec cancel_exit(OMG.Burner.token()) :: :ok | OMG.Burner.error()
   def cancel_exit(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:cancel_exit, token})
   end
 
-  @spec get_pending_fees(OMG.Burner.token) :: {:ok, pos_integer, OMG.Burner.tx_hash}
+  @spec get_pending_fees(OMG.Burner.token()) :: {:ok, pos_integer, OMG.Burner.tx_hash()}
   def get_pending_fees(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:get_pending, token})
   end
 
-  @spec get_pending_fees() :: list({atom, pos_integer, OMG.Burner.tx_hash})
+  @spec get_pending_fees() :: list({atom, pos_integer, OMG.Burner.tx_hash()})
   def get_pending_fees() do
     GenServer.call(__MODULE__, :get_pending)
   end
 
-  @spec get_accumulated_fees(OMG.Burner.token) :: {:ok, pos_integer} | OMG.Burner.error
+  @spec get_accumulated_fees(OMG.Burner.token()) :: {:ok, pos_integer} | OMG.Burner.error()
   def get_accumulated_fees(token) when is_atom(token) do
     GenServer.call(__MODULE__, {:get_accumulated, token})
   end
@@ -48,11 +47,10 @@ defmodule OMG.Burner.State do
     GenServer.call(__MODULE__, :get_accumulated)
   end
 
-  @spec set_tx_hash_of_pending(OMG.Burner.token, OMG.Burner.tx_hash) :: :ok | OMG.Burner.error
+  @spec set_tx_hash_of_pending(OMG.Burner.token(), OMG.Burner.tx_hash()) :: :ok | OMG.Burner.error()
   def set_tx_hash_of_pending(token, hash) when is_atom(token) do
     GenServer.call(__MODULE__, {:set_pending_hash, token, hash})
   end
-
 
   # GenServer
 
@@ -92,13 +90,15 @@ defmodule OMG.Burner.State do
       else
         :error -> {:error, :no_such_record}
       end
+
     {:reply, reply, state}
   end
 
   def handle_call(:get_pending, _from, {_, pending} = state) do
-    reply = pending
-            |> Map.to_list()
-            |> Enum.map(&format_pending_to_return/1)
+    reply =
+      pending
+      |> Map.to_list()
+      |> Enum.map(&format_pending_to_return/1)
 
     {:reply, reply, state}
   end
@@ -122,16 +122,14 @@ defmodule OMG.Burner.State do
     accumulated
     |> Map.update(token, value, &(&1 + value))
     |> Enum.filter(fn {_token, value} -> value > 0 end)
-    |> Map.new
+    |> Map.new()
   end
 
   defp do_move_to_pending(token, {accumulated, pending} = state) do
     with :error <- Map.fetch(pending, token),
          {:ok, value} <- Map.fetch(accumulated, token) do
-
       updated_state = move_token_to_pending(token, state)
       {{:ok, value}, updated_state}
-
     else
       {:ok, _} -> {{:error, :exit_already_started}, state}
       _ -> {{:error, :no_such_record}, state}
@@ -168,8 +166,7 @@ defmodule OMG.Burner.State do
     end
   end
 
-  defp format_pending_to_return({token, %{value: value, tx_hash: tx_hash}})do
+  defp format_pending_to_return({token, %{value: value, tx_hash: tx_hash}}) do
     {token, value, tx_hash}
   end
-
 end

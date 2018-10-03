@@ -1,6 +1,5 @@
 defmodule AdjustableServer do
-
-  defmacro __using__(_opts)do
+  defmacro __using__(_opts) do
     quote do
       use GenServer
 
@@ -17,8 +16,7 @@ defmodule AdjustableServer do
       end
 
       def handle_call({:set, setting, value}, _from, state) do
-        with {:ok, old} <- Map.fetch(state, setting)
-          do
+        with {:ok, old} <- Map.fetch(state, setting) do
           upated_state = Map.put(state, setting, value)
           {:reply, {:ok, old}, upated_state}
         else
@@ -27,5 +25,4 @@ defmodule AdjustableServer do
       end
     end
   end
-
 end
