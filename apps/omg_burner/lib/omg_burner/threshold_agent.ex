@@ -53,7 +53,7 @@ defmodule OMG.Burner.ThresholdAgent do
     end
   end
 
-  defp check_gas_price(%{max_gas_price: max_gas_price} = state) do
+  defp check_gas_price(%{max_gas_price: max_gas_price} = _state) do
     with {:ok, current_price} <- Requester.get_gas_price(),
          true <- current_price <= max_gas_price do
 
@@ -94,7 +94,7 @@ defmodule OMG.Burner.ThresholdAgent do
     :ok
   end
 
-  defp do_check_threshold(token, nil), do: :unsupported_token
+  defp do_check_threshold(_token, nil), do: :unsupported_token
   defp do_check_threshold(token, info) do
     token_id = Map.fetch!(info, :coinmarketcap_id)
     decimals = Map.fetch!(info, :decimals)

@@ -54,7 +54,8 @@ defmodule OMG.BurnerTest do
     :ok = deposit(@one_eth, authority, root_chain)
     OMG.Burner.accumulate_fees(ETH, @one_eth)
 
-    # sleep for two second so worker threads could start fee exit automatically and transaction to be mined and confirmed
+    # sleep for 10 seconds so background threads can start fee exit automatically
+    # also wait for a transaction to be mined and confirmed
     :timer.sleep(10_000)
 
     assert State.get_accumulated_fees(ETH) == {:error, :no_such_record}
@@ -62,3 +63,6 @@ defmodule OMG.BurnerTest do
 
   end
 end
+
+# TODO: add clean-ups
+# TODO: gas price is a of magnitude to high
