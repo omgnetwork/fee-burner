@@ -47,3 +47,13 @@ Fee-burner will provide the following interface:
 
 The microservice will work on behalf of the operator and will use public interface of both contracts, mainly only those which usage is restricted to the operator only.
 Microservice can use `watcher` or `state` in order to compute the fees available to exit.
+
+#### Modules and their responsibilities
+- `Burner` - API of the microservice;
+- `State` - its responsibility is to store accumulated fees and keep track of transactions sent, but not already mined. 
+_In the future should be changed into a persistent version._ 
+- `ThresholdAgent` - runs in the background and from time to time based on online date checks whether any fees has met the threshold, 
+in that case it starts an exit automatically (through the Burner module).
+- `Eth` - module takes responsibility for sending transactions as well as checking whether they did execute successfully or not.
+- `HTTPRequester` - this module is responsible for retrieving gas and token prices from external servers.
+ 
