@@ -1,6 +1,16 @@
 #Summary
 The following document has been written in order to summarise the project, describe encountered problems.
 
+## What was implemented and what was not?
+The project results in successfully implemented the following parts:
+- fee burner contract;
+- root chain contract's amends;
+- microservice's core.
+
+The project is not finished yet, as the today's implementation of `elixir-omg` does not allow this service to work automatically.
+The lacking part of the system is the part that automatically adds fees collected in each transaction being made on child chain.
+This is caused by the lack of such an information in `elixir-omg` - it has not been decided yet how to implement it. 
+
 ## Encountered problems
 ### elixir-omg as a dependency
 When `elixir-omg` project was loaded as a dependency of this project, some problems were met.
@@ -46,4 +56,3 @@ it is a correct transaction.
 Demo has been written in order to show how does the root chain contract automatically sends tokens to fee burner contract 
 and how an exchange is being made. At the time of writing the demo, the microservice was not finished yet, which is why 
 it is not included in the demo.    
-
