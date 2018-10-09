@@ -12,7 +12,6 @@ defmodule OMG.Burner.DevHelpers do
   @one_thousand_omg trunc(:math.pow(10, 18) * 1_000)
 
   @dead_address ExW3.format_address("0xdead")
-  #  @zero_address ExW3.format_address("0x00")
 
   def prepare_env!(root_path \\ "./") do
     {:ok, _} = Application.ensure_all_started(:ethereumex)

@@ -9,7 +9,7 @@ The project results in successfully implemented the following parts:
 
 The project is not finished yet, as the today's implementation of `elixir-omg` does not allow this service to work automatically.
 The lacking part of the system is the part that automatically adds fees collected in each transaction being made on child chain.
-This is caused by the lack of such an information in `elixir-omg` - it has not been decided yet how to implement it. 
+This is caused by the lack of such information in `elixir-omg` - it has not been decided yet how to implement it. 
 
 ## Encountered problems
 ### elixir-omg as a dependency

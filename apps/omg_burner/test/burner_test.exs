@@ -33,7 +33,6 @@ defmodule OMG.BurnerTest do
     assert State.get_pending_fees(ETH) == {:error, :no_such_record}
   end
 
-  @tag :current
   @tag fixtures: [:root_chain, :authority, :agent]
   test "deposit, report fees to the microservice, make an exchange - AKA happy path",
        %{root_chain: root_chain, authority: authority, agent: :ok} do
