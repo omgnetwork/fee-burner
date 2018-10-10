@@ -1,4 +1,4 @@
-#Summary
+# Summary
 The following document has been written in order to summarise the project, describe encountered problems.
 
 ## What was implemented and what was not?
