@@ -1,5 +1,7 @@
 # Submitting transactions to child chain, exiting fees and doing an exchange
 
+_NOTE: The following demo does not use the microservice, and all transactions have to be send manually_
+
 Start geth with the following command
 ```commandline
 user@host:~$ geth --dev --dev.period 1 --rpc --rpcapi personal,web3,eth
