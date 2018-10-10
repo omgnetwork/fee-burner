@@ -1,4 +1,9 @@
 defmodule OMG.Burner.Eth do
+  @moduledoc """
+     This module is an interface to the Ethereum world. It is responsible for sending start exit transaction.
+     Whenever a transaction is sent it waits till the transaction has been mined and informs the system about the confirmation.
+  """
+
   require Logger
 
   use AdjustableServer

@@ -1,4 +1,9 @@
 defmodule OMG.Burner.State do
+  @moduledoc """
+     State is stores data about currently accumulated fees and
+     about start fee exit transactions that were sent, but has not yet been mined.
+  """
+
   use GenServer
 
   # API

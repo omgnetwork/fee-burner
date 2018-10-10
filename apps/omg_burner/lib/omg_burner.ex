@@ -1,4 +1,9 @@
 defmodule OMG.Burner do
+  @moduledoc """
+    This is an facade of the microservice's core. Having provided information about fees to be collected the Burner
+    is able to store data about fees and start fee exits automatically.
+  """
+
   require Logger
 
   alias OMG.Burner.State

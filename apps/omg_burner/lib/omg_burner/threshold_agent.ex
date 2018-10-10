@@ -1,4 +1,9 @@
 defmodule OMG.Burner.ThresholdAgent do
+  @moduledoc """
+    ThresholdAgent is a background task once in a while gets current gas price,
+    checks whether thresholds has been met. If so, it triggers fee exit.
+  """
+
   use AdjustableServer
 
   alias OMG.Burner.HttpRequester, as: Requester

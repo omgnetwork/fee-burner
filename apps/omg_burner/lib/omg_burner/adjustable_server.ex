@@ -1,4 +1,9 @@
 defmodule AdjustableServer do
+  @defmodule """
+     A generic module that expands capabilities of a basic GenServer.
+     It enables one to run a GenServer which settings can be adjusted throughout its work.
+  """
+
   defmacro __using__(_opts) do
     quote do
       use GenServer

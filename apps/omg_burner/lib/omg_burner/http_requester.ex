@@ -1,4 +1,9 @@
 defmodule OMG.Burner.HttpRequester do
+  @moduledoc """
+     HttpRequester is a module responsible for retrieving current gas price and tokens' exchange rates.
+     The module uses REST APIs of ethgasstation (gas price) and coinmarketcap (exchange rates) in order to provide its service.
+  """
+
   @gas_station_url "https://ethgasstation.info/json/ethgasAPI.json"
   @market_api_url "https://api.coinmarketcap.com/v2/ticker/"
 
